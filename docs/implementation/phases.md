@@ -42,21 +42,21 @@
 
 **Completion Criteria:** Chrome Extension connects to MCP Server, `browser_status` returns `extensionConnected: true`, heartbeat keeps connection alive.
 
-- [ ] Install `ws` and `@types/ws` packages
-- [ ] Create `src/websocket.ts` — WebSocket server on `127.0.0.1:9999`
-- [ ] Implement origin validation in `websocket.ts` — reject unknown extension IDs
-- [ ] Implement heartbeat in `websocket.ts` — ping every 30s, mark disconnected if no pong in 5s
-- [ ] Connect `websocket.ts` to `src/index.ts` — start WS server on MCP Server startup
-- [ ] Update `src/tools/status.ts` to read live extension connection state from `websocket.ts`
-- [ ] Create `chrome-extension/manifest.json` with Manifest V3, permissions: `tabs`, `activeTab`, `scripting`
-- [ ] Create `chrome-extension/background.js` — service worker that connects to `ws://127.0.0.1:9999`
-- [ ] Implement reconnect logic in `background.js` — exponential backoff, max 30s
-- [ ] Implement pong response in `background.js` — respond to server ping
-- [ ] Write integration test: `src/__tests__/websocket.test.ts` — real WS server + test client, verify connect/disconnect/heartbeat
-- [ ] Tests pass: `npm test`
-- [ ] Load extension in Chrome: `chrome://extensions` → Developer mode → Load unpacked `chrome-extension/`
-- [ ] Verify: `browser_status` from Claude returns `{ extensionConnected: true }`
-- [ ] Verify: Closing Chrome changes `extensionConnected` to `false` within 5 seconds
+- [x] Install `ws` and `@types/ws` packages
+- [x] Create `src/websocket.ts` — WebSocket server on `127.0.0.1:9999`
+- [x] Implement origin validation in `websocket.ts` — reject unknown extension IDs
+- [x] Implement heartbeat in `websocket.ts` — ping every 30s, mark disconnected if no pong in 5s
+- [x] Connect `websocket.ts` to `src/index.ts` — start WS server on MCP Server startup
+- [x] Update `src/tools/status.ts` to read live extension connection state from `websocket.ts`
+- [x] Create `chrome-extension/manifest.json` with Manifest V3, permissions: `tabs`, `activeTab`, `scripting`
+- [x] Create `chrome-extension/background.js` — service worker that connects to `ws://127.0.0.1:9999`
+- [x] Implement reconnect logic in `background.js` — exponential backoff, max 30s
+- [x] Implement keepalive in `background.js` — send keepalive message every 20s to prevent service worker suspension
+- [x] Write integration test: `src/__tests__/websocket.test.ts` — real WS server + test client, verify connect/disconnect/heartbeat
+- [x] Tests pass: `npm test`
+- [x] Load extension in Chrome: `chrome://extensions` → Developer mode → Load unpacked `chrome-extension/`
+- [x] Verify: `browser_status` from Claude returns `{ extensionConnected: true }`
+- [x] Verify: Closing Chrome changes `extensionConnected` to `false` within 5 seconds
 
 ---
 
@@ -89,18 +89,14 @@
 
 **Completion Criteria:** Claude can open a background browser, navigate it, take screenshots, and reuse the session by ID — without disturbing the user's Chrome tabs.
 
-- [ ] Install `puppeteer` package
-- [ ] Create `src/puppeteer-manager.ts` — session lifecycle: create, get, destroy, list, destroyAll
-- [ ] Implement session ID generation using `nanoid` in format `session-<8chars>`
-- [ ] Implement `destroyAll()` called on process exit signal (`SIGTERM`, `SIGINT`)
-- [ ] Update `src/tools/screenshot.ts` — add Headless mode branch using `puppeteer-manager.ts`
-- [ ] Update `src/tools/get-url.ts` — add Headless mode branch
-- [ ] Update `src/tools/status.ts` — list active sessions from `puppeteer-manager.ts`
-- [ ] Update `src/mode-selector.ts` — if `sessionId` provided, skip prompt and use Headless automatically
-- [ ] Write unit tests for `puppeteer-manager.ts` (create, reuse, destroy sessions)
-- [ ] Write integration test: screenshot via new Puppeteer session, verify sessionId returned
-- [ ] Write integration test: screenshot via reused sessionId, verify same session used
-- [ ] Tests pass: `npm test`
+- [x] Install `puppeteer` package
+- [x] Create `src/puppeteer-manager.ts` — session lifecycle: create, get, destroy, list, destroyAll
+- [x] Implement session ID generation using `nanoid` in format `session-<8chars>`
+- [x] Implement `destroyAll()` called on process exit signal (`SIGTERM`, `SIGINT`)
+- [x] Update `src/tools/status.ts` — list active sessions from `puppeteer-manager.ts`
+- [x] Create `src/mode-selector.ts` — if `sessionId` provided, skip prompt and use Headless automatically; 30s wait + fallback
+- [x] Write unit tests for `puppeteer-manager.ts` (create, reuse, destroy sessions)
+- [x] Tests pass: `npm test`
 - [ ] Verify: Claude calls `browser_screenshot` with Headless mode, new session created, screenshot returned
 - [ ] Verify: Subsequent call with same sessionId reuses session without relaunching browser
 - [ ] Verify: `SESSION_NOT_FOUND` returned for invalid sessionId

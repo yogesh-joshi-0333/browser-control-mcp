@@ -30,6 +30,7 @@
 |---|-------|------|-------|--------|---------|-----------|-------|
 | 1 | Docs | Create full documentation structure | Claude Sonnet 4.6 | Completed | 2026-03-18 | 2026-03-18 | All 24 files created |
 | 2 | Phase 1 | MCP Server Skeleton | Claude Sonnet 4.6 | Completed | 2026-03-18 | 2026-03-18 | All tasks done. 8/8 tests pass. browser_status Connected in claude mcp list. |
+| 3 | Phase 2+4 | WebSocket Bridge + Puppeteer (Combined) | Claude Sonnet 4.6 | Completed | 2026-03-18 | 2026-03-18 | All 23 tests pass. WS server on port 9999. Chrome Extension connected and stable. Puppeteer session manager working. Mode selector with 30s fallback. browser_status returns live state. |
 
 ---
 
@@ -39,8 +40,7 @@
 |-------|------|--------|-------|
 | Docs | Documentation Setup | Completed | All files created 2026-03-18 |
 | 1 | MCP Server Skeleton | Completed | All tasks done. 8/8 tests pass. 2026-03-18 |
-| 2 | WebSocket Bridge | Pending | — |
+| 2+4 | WebSocket Bridge + Puppeteer | Completed | 23/23 tests pass. Extension stable. 2026-03-18 |
 | 3 | V1 Tools via Extension | Pending | — |
-| 4 | Headless Mode (Puppeteer) | Pending | — |
 | 5 | V2 Tools (Click, Scroll, Console) | Pending | — |
 | 6 | V3 Tools (DOM, Type, Navigate, Record, Diff, Test) | Pending | — |

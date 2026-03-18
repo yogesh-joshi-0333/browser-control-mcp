@@ -3,10 +3,12 @@
 
 const WS_URL = 'ws://127.0.0.1:9999';
 const MAX_BACKOFF_MS = 30_000;
+const KEEPALIVE_INTERVAL_MS = 20_000;
 
 let ws = null;
 let reconnectDelay = 1000;
 let reconnectTimer = null;
+let keepaliveTimer = null;
 
 function connect() {
   if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
@@ -19,6 +21,12 @@ function connect() {
   ws.onopen = () => {
     console.log('[BrowserControlMCP] Connected to MCP server');
     reconnectDelay = 1000;
+    if (keepaliveTimer) clearInterval(keepaliveTimer);
+    keepaliveTimer = setInterval(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'keepalive' }));
+      }
+    }, KEEPALIVE_INTERVAL_MS);
   };
 
   ws.onmessage = async (event) => {
@@ -48,6 +56,7 @@ function connect() {
   ws.onclose = () => {
     console.log('[BrowserControlMCP] Disconnected. Reconnecting in', reconnectDelay, 'ms');
     ws = null;
+    if (keepaliveTimer) { clearInterval(keepaliveTimer); keepaliveTimer = null; }
     scheduleReconnect();
   };
 

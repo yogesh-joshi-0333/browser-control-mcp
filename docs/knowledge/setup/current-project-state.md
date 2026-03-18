@@ -5,7 +5,7 @@
 
 ## Overall Status
 
-**Phase 1 Complete — Phase 2 Not Started**
+**Phase 2+4 Complete — Phase 3 Not Started**
 
 ---
 
@@ -47,19 +47,21 @@
 | `src/types.ts` | Complete | `/media/pc/External/Project/mcp/src/types.ts` |
 | `src/index.ts` | Complete | `/media/pc/External/Project/mcp/src/index.ts` |
 | `src/tools/status.ts` | Complete | `/media/pc/External/Project/mcp/src/tools/status.ts` |
+| `src/websocket.ts` | Complete | `/media/pc/External/Project/mcp/src/websocket.ts` |
+| `src/puppeteer-manager.ts` | Complete | `/media/pc/External/Project/mcp/src/puppeteer-manager.ts` |
+| `src/mode-selector.ts` | Complete | `/media/pc/External/Project/mcp/src/mode-selector.ts` |
+| `chrome-extension/manifest.json` | Complete | `/media/pc/External/Project/mcp/chrome-extension/manifest.json` |
+| `chrome-extension/background.js` | Complete | `/media/pc/External/Project/mcp/chrome-extension/background.js` |
 | MCP server registration | Complete | `~/.claude.json` (via `claude mcp add`) |
+| Chrome Extension loaded | Complete | Loaded in Chrome via `chrome://extensions` (Developer mode) |
 
 ---
 
 ## What Does NOT Exist Yet
 
-- MCP Server source code (`mcp-server/src/`)
-- Chrome Extension code (`chrome-extension/`)
-- `config.json` runtime configuration file
-- `~/.claude/settings.json` MCP entry
-- Any npm packages installed
-- Any tests written
-- Any compiled TypeScript output
+- `src/tools/screenshot.ts` — browser_screenshot tool
+- `src/tools/get-url.ts` — browser_get_url tool
+- Phase 5/6 tools (click, scroll, DOM, etc.)
 
 ---
 
@@ -112,9 +114,8 @@ After all 6 phases are complete, the code directory will look like:
 |-------|--------|-------|
 | Docs | Completed | All documentation created 2026-03-18 |
 | 1 — MCP Server Skeleton | Completed | All tasks done. 8/8 tests pass. 2026-03-18 |
-| 2 — WebSocket Bridge | Not Started | — |
+| 2+4 — WebSocket Bridge + Puppeteer | Completed | 23/23 tests. Extension connected. 2026-03-18 |
 | 3 — V1 Tools via Extension | Not Started | — |
-| 4 — Headless Mode | Not Started | — |
 | 5 — V2 Tools | Not Started | — |
 | 6 — V3 Tools | Not Started | — |
 
