@@ -1,29 +1,32 @@
-import { describe, it, expect } from '@jest/globals';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { statusTool } from '../tools/status.js';
+import { describe, it, expect, jest } from '@jest/globals';
 
-function getTextContent(result: CallToolResult): string {
-  const item = result.content[0];
-  if (item.type !== 'text') throw new Error('Expected text content');
-  return item.text;
-}
+jest.unstable_mockModule('../websocket.js', () => ({
+  getConnectionState: jest.fn().mockReturnValue({ connected: false, socketId: null })
+}));
+jest.unstable_mockModule('../puppeteer-manager.js', () => ({
+  listSessions: jest.fn().mockReturnValue([])
+}));
+
+const { statusTool } = await import('../tools/status.js');
 
 describe('browser_status tool', () => {
   it('has correct tool name', () => {
     expect(statusTool.name).toBe('browser_status');
   });
 
-  it('returns extensionConnected: false', async () => {
+  it('returns extensionConnected: false when not connected', async () => {
     const result = await statusTool.handler({});
-    expect(result.isError).toBeFalsy();
-    const text = getTextContent(result);
-    const data = JSON.parse(text);
+    const content = result.content[0];
+    if (content.type !== 'text') throw new Error('Expected text content');
+    const data = JSON.parse(content.text);
     expect(data.extensionConnected).toBe(false);
   });
 
   it('returns empty headlessSessions array', async () => {
     const result = await statusTool.handler({});
-    const data = JSON.parse(getTextContent(result));
+    const content = result.content[0];
+    if (content.type !== 'text') throw new Error('Expected text content');
+    const data = JSON.parse(content.text);
     expect(data.headlessSessions).toEqual([]);
   });
 

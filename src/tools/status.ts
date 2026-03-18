@@ -2,6 +2,8 @@ import { z } from 'zod';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
+import { getConnectionState } from '../websocket.js';
+import { listSessions } from '../puppeteer-manager.js';
 
 const outputSchema = z.object({
   extensionConnected: z.boolean().describe('Whether the Chrome Extension is connected'),
@@ -18,13 +20,10 @@ export const statusTool: ITool = {
   },
   handler: async (_args: Record<string, unknown>): Promise<CallToolResult> => {
     try {
-      const status = {
-        extensionConnected: false,
-        headlessSessions: [] as string[]
-      };
-
+      const { connected } = getConnectionState();
+      const sessions = listSessions();
+      const status = { extensionConnected: connected, headlessSessions: sessions };
       logger.info('browser_status called', status);
-
       return {
         content: [{ type: 'text', text: JSON.stringify(status) }],
         structuredContent: status
