@@ -2,13 +2,17 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { logger } from './logger.js';
 import { statusTool } from './tools/status.js';
+import { screenshotTool } from './tools/screenshot.js';
+import { getUrlTool } from './tools/get-url.js';
 import { startWebSocketServer, stopWebSocketServer } from './websocket.js';
 import { destroyAll } from './puppeteer-manager.js';
 import { WS_PORT } from './config.js';
 import type { ITool } from './types.js';
 
 const tools: ITool[] = [
-  statusTool
+  statusTool,
+  screenshotTool,
+  getUrlTool
 ];
 
 async function shutdown(): Promise<void> {
