@@ -4,6 +4,12 @@ import { logger } from './logger.js';
 import { statusTool } from './tools/status.js';
 import { screenshotTool } from './tools/screenshot.js';
 import { getUrlTool } from './tools/get-url.js';
+import { navigateTool } from './tools/navigate.js';
+import { clickTool } from './tools/click.js';
+import { scrollTool } from './tools/scroll.js';
+import { typeTool } from './tools/type.js';
+import { getDomTool } from './tools/get-dom.js';
+import { consoleLogsTool } from './tools/console-logs.js';
 import { startWebSocketServer, stopWebSocketServer } from './websocket.js';
 import { destroyAll } from './puppeteer-manager.js';
 import { WS_PORT } from './config.js';
@@ -12,7 +18,13 @@ import type { ITool } from './types.js';
 const tools: ITool[] = [
   statusTool,
   screenshotTool,
-  getUrlTool
+  getUrlTool,
+  navigateTool,
+  clickTool,
+  scrollTool,
+  typeTool,
+  getDomTool,
+  consoleLogsTool
 ];
 
 async function shutdown(): Promise<void> {

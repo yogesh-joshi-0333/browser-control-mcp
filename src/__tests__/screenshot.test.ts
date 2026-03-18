@@ -56,7 +56,7 @@ describe('browser_screenshot', () => {
     const fakeBuffer = Buffer.from('fake-png-data');
     const mockPage = { screenshot: jest.fn<() => Promise<Buffer>>().mockResolvedValue(fakeBuffer) };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
 
     const result = await screenshotTool.handler({ sessionId: 'session-abc12345' });
 

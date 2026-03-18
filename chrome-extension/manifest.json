@@ -3,7 +3,8 @@
   "name": "Browser Control MCP",
   "version": "1.0.0",
   "description": "Connects Claude Code to your Chrome browser for browser control",
-  "permissions": ["tabs", "activeTab", "scripting"],
+  "permissions": ["tabs", "scripting", "windows"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   }
