@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Browser Control MCP",
+  "version": "1.0.0",
+  "description": "Connects Claude Code to your Chrome browser for browser control",
+  "permissions": ["tabs", "activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
