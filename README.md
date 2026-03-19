@@ -206,7 +206,7 @@ No parameters.
 ## Development
 
 ```bash
-git clone https://github.com/yogesh-joshi-0333/browser-control-mcp.git
+git clone https://github.com/tech-ark-yogesh/browser-control-mcp.git
 cd browser-control-mcp
 npm install
 npm run build
