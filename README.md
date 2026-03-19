@@ -1,4 +1,4 @@
-# browser-control-mcp
+# browser-control-mcp-server
 
 MCP server that gives AI agents full browser control — navigate to any website, click, type, scroll, take screenshots, inspect DOM, and read console logs.
 
@@ -23,13 +23,13 @@ Works with **any MCP-compatible client**: Claude, Cursor, Windsurf, Cline, and m
 ### 1. Install
 
 ```bash
-npm install -g browser-control-mcp
+npm install -g browser-control-mcp-server
 ```
 
 Or run directly with npx:
 
 ```bash
-npx browser-control-mcp
+npx browser-control-mcp-server
 ```
 
 ### 2. Configure Your MCP Client
@@ -41,7 +41,7 @@ Add to your MCP client configuration:
   "mcpServers": {
     "browser-control": {
       "command": "npx",
-      "args": ["browser-control-mcp"]
+      "args": ["browser-control-mcp-server"]
     }
   }
 }
@@ -206,8 +206,8 @@ No parameters.
 ## Development
 
 ```bash
-git clone https://github.com/yogesh-joshi-0333/browser-control-mcp.git
-cd browser-control-mcp
+git clone https://github.com/yogesh-joshi-0333/browser-control-mcp-server.git
+cd browser-control-mcp-server
 npm install
 npm run build
 npm test

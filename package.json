@@ -1,11 +1,11 @@
 {
-  "name": "browser-control-mcp",
+  "name": "browser-control-mcp-server",
   "version": "1.0.0",
   "description": "MCP server that gives AI agents full browser control — navigate, click, type, scroll, screenshot, inspect DOM, and read console logs in both headless Puppeteer and real Chrome browser.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "browser-control-mcp": "dist/index.js"
+    "browser-control-mcp-server": "dist/index.js"
   },
   "files": [
     "dist",
