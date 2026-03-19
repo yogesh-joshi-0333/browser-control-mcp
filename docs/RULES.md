@@ -122,7 +122,7 @@ All action names are `snake_case`. All field names are `camelCase`. No exception
 - Every WebSocket message type MUST have an integration test
 - No mocking of the WebSocket layer in integration tests — use a real ws server
 - No mocking of Puppeteer — use a real headless browser in tests
-- Test file location: `mcp-server/src/__tests__/`
+- Test file location: `src/__tests__/`
 - Every test file named: `<module>.test.ts`
 - Tests MUST pass before marking any phase task as complete
 
@@ -144,13 +144,12 @@ All action names are `snake_case`. All field names are `camelCase`. No exception
 
 ## Rule 8: File and Structure Rules
 
-- All MCP Server source code lives in: `mcp-server/src/`
+- All MCP Server source code lives in: `src/`
 - All Chrome Extension code lives in: `chrome-extension/`
-- All documentation lives in: `/var/www/html/plan/browser-control-mcp/`
-- Never put documentation inside the code repo
+- All documentation lives in: `docs/`
 - Never put code inside the documentation folder
-- Tools are one file per tool: `mcp-server/src/tools/<tool-name>.ts`
-- Tests mirror source: `mcp-server/src/__tests__/<module>.test.ts`
+- Tools are one file per tool: `src/tools/<tool-name>.ts`
+- Tests mirror source: `src/__tests__/<module>.test.ts`
 
 ---
 

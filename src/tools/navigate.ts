@@ -10,7 +10,7 @@ export const navigateTool: ITool = {
   name: 'browser_navigate',
   options: {
     title: 'Navigate Browser',
-    description: 'Navigate the browser to a URL. Uses the Chrome Extension by default, or a Puppeteer session in headless mode.',
+    description: 'Navigate the browser to any URL — websites, localhost, web apps. Opens the page and waits for it to fully load. In headless mode, you can set custom viewport dimensions (width/height in pixels) to simulate desktop (1920x1080), tablet (768x1024), or mobile (375x812) screen sizes. Returns the final URL and sessionId. Pass the returned sessionId to all subsequent tool calls to reuse this browser session.',
     inputSchema: z.object({
       url: z.string().describe('The URL to navigate to.'),
       width: z.number().optional().describe('Viewport width in pixels (headless only). Default 1024.'),

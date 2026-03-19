@@ -14,7 +14,7 @@ export const statusTool: ITool = {
   name: 'browser_status',
   options: {
     title: 'Browser Status',
-    description: 'Check Chrome Extension connection status and list active headless Puppeteer sessions',
+    description: 'Check browser readiness: reports whether Chrome Extension is connected (for controlling the user\'s real browser) and lists all active headless Puppeteer session IDs. No parameters needed. Use this to verify the server is running and see which browser sessions are available before interacting with pages.',
     inputSchema: z.object({}),
     outputSchema
   },

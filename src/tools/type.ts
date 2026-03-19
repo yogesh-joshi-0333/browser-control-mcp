@@ -10,7 +10,7 @@ export const typeTool: ITool = {
   name: 'browser_type',
   options: {
     title: 'Browser Type',
-    description: 'Type text into a form field or element by CSS selector. Uses Chrome Extension by default, or a Puppeteer session in headless mode.',
+    description: 'Type text into any input field, textarea, search bar, or contenteditable element by CSS selector. Use this to fill out forms, enter search queries, write messages, type login credentials, etc. Examples: browser_type({selector: "input[name=email]", text: "user@example.com"}), browser_type({selector: "#search", text: "search query"}). Combine with browser_click to submit forms after filling them.',
     inputSchema: z.object({
       selector: z.string().describe('CSS selector of the element to type into.'),
       text: z.string().describe('Text to type into the element.'),

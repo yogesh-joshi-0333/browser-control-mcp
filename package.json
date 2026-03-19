@@ -1,19 +1,57 @@
 {
   "name": "browser-control-mcp",
   "version": "1.0.0",
-  "description": "MCP server giving Claude Code full browser control",
+  "description": "MCP server that gives AI agents full browser control — navigate, click, type, scroll, screenshot, inspect DOM, and read console logs in both headless Puppeteer and real Chrome browser.",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "browser-control-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "chrome-extension",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "npm run build"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "mcp",
+    "browser",
+    "automation",
+    "puppeteer",
+    "chrome",
+    "chrome-extension",
+    "screenshot",
+    "headless",
+    "browser-control",
+    "model-context-protocol",
+    "claude",
+    "ai-agent",
+    "web-automation",
+    "dom-inspection",
+    "testing"
+  ],
+  "author": "Yogesh Joshi <joshiyogesh0333@gmail.com> (https://devyogesh.com)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yogesh-joshi-0333/browser-control-mcp.git"
+  },
+  "homepage": "https://github.com/yogesh-joshi-0333/browser-control-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/yogesh-joshi-0333/browser-control-mcp/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
     "nanoid": "^5.1.7",

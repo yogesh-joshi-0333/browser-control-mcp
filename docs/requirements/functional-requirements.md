@@ -8,7 +8,7 @@
 | ID | Requirement |
 |----|-------------|
 | FR-MCP-01 | The MCP Server MUST start as a Node.js process and register itself with Claude Code via the MCP protocol using stdio transport |
-| FR-MCP-02 | The MCP Server MUST expose all V1 tools to Claude Code on startup: `browser_status`, `browser_screenshot`, `browser_get_url` |
+| FR-MCP-02 | The MCP Server MUST expose all V1 tools to Claude Code on startup: `browser_select_mode`, `browser_status`, `browser_screenshot`, `browser_get_url` |
 | FR-MCP-03 | The MCP Server MUST expose all V2 tools in Phase 5: `browser_click`, `browser_scroll`, `browser_console_logs` |
 | FR-MCP-04 | The MCP Server MUST expose all V3 tools in Phase 6: `browser_get_dom`, `browser_type`, `browser_navigate`, `browser_record_start`, `browser_record_stop`, `browser_visual_diff`, `browser_run_test` |
 | FR-MCP-05 | Every tool call MUST prompt the user to select mode: Extension or Headless, before executing |
@@ -125,6 +125,18 @@
 | FR-TOOL-CONSOLE-01 | `browser_console_logs` MUST return all console messages captured since the last call or page load |
 | FR-TOOL-CONSOLE-02 | Each log entry MUST include: level (`log`, `warn`, `error`, `info`), message, timestamp |
 | FR-TOOL-CONSOLE-03 | `browser_console_logs` MUST support a `clear` parameter that clears the buffer after returning |
+
+---
+
+## Tool: browser_select_mode (FR-TOOL-MODE)
+
+| ID | Requirement |
+|----|-------------|
+| FR-TOOL-MODE-01 | `browser_select_mode` MUST return whether the Chrome Extension is currently connected |
+| FR-TOOL-MODE-02 | `browser_select_mode` MUST return the list of available mode options based on extension connectivity |
+| FR-TOOL-MODE-03 | `browser_select_mode` MUST return the currently selected default mode if one has been set |
+| FR-TOOL-MODE-04 | When the AI calls `browser_select_mode` with a chosen mode, it MUST persist as the session default for subsequent tool calls |
+| FR-TOOL-MODE-05 | `browser_select_mode` MUST NOT require a mode selection prompt — it is the mode selection mechanism itself |
 
 ---
 

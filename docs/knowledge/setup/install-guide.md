@@ -20,21 +20,21 @@
 ### 1. Clone or create the project directory
 
 ```bash
-mkdir -p ~/projects/browser-control-mcp
-cd ~/projects/browser-control-mcp
+mkdir -p /media/pc/External/Project/mcp
+cd /media/pc/External/Project/mcp
 ```
 
 ### 2. Initialize the MCP Server
 
 ```bash
-cd mcp-server
+cd /media/pc/External/Project/mcp
 npm install
 npm run build
 ```
 
 ### 3. Create the config file
 
-Create `~/projects/browser-control-mcp/config.json`:
+Create `/media/pc/External/Project/mcp/config.json`:
 
 ```json
 {
@@ -57,20 +57,18 @@ Add to `~/.claude/settings.json` under `mcpServers`:
   "mcpServers": {
     "browser-control": {
       "command": "node",
-      "args": ["/home/YOUR_USERNAME/projects/browser-control-mcp/mcp-server/dist/index.js"]
+      "args": ["/media/pc/External/Project/mcp/dist/index.js"]
     }
   }
 }
 ```
-
-Replace `YOUR_USERNAME` with your actual username.
 
 ### 5. Load the Chrome Extension
 
 1. Open Chrome and navigate to `chrome://extensions`
 2. Enable **Developer mode** (top right toggle)
 3. Click **Load unpacked**
-4. Select the `chrome-extension/` folder from the project
+4. Select the folder: `/media/pc/External/Project/mcp/chrome-extension/`
 5. Copy the **Extension ID** shown (format: `abcdefghijklmnopqrstuvwxyz123456`)
 6. Paste the Extension ID into `config.json` as `extensionId`
 
@@ -84,7 +82,7 @@ Close and reopen VSCode, or run: **Claude Code: Restart MCP Servers** from the c
 
 **Step 1 — MCP Server registered:**
 Open Claude Code and ask: "What browser tools do you have?"
-Expected: Claude lists `browser_status`, `browser_screenshot`, `browser_get_url`
+Expected: Claude lists `browser_select_mode`, `browser_status`, `browser_screenshot`, `browser_get_url`, `browser_navigate`, `browser_click`, `browser_scroll`, `browser_type`, `browser_get_dom`, `browser_console_logs`
 
 **Step 2 — Extension connected:**
 Ask Claude: "Call browser_status"
@@ -115,6 +113,6 @@ Expected: Claude describes the page content
 | `browser_status` returns `extensionConnected: false` | Ensure Chrome is open, extension is loaded and enabled in `chrome://extensions` |
 | Claude Code does not show `browser-control` server | Check `~/.claude/settings.json` path is correct; restart Claude Code |
 | `TIMEOUT_ERROR` on screenshot | Check extension is not suspended; reload extension in `chrome://extensions` |
-| WebSocket connection refused | Ensure MCP Server is running (`npm start` in `mcp-server/`) |
+| WebSocket connection refused | Ensure MCP Server is running (`npm start` in `/media/pc/External/Project/mcp/`) |
 | Extension fails to connect after Chrome restart | Chrome service workers restart automatically — wait 5 seconds and try again |
 | Screenshot returns blank image | Active tab must be a regular web page — not `chrome://` pages |

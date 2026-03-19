@@ -10,7 +10,7 @@ export const scrollTool: ITool = {
   name: 'browser_scroll',
   options: {
     title: 'Scroll Browser Page',
-    description: 'Scroll the page by a given amount. Uses Chrome Extension by default, or a Puppeteer session in headless mode.',
+    description: 'Scroll the page by pixel amount. Use positive y to scroll down, negative y to scroll up. Examples: scroll down 500px → {y: 500}, scroll up → {y: -500}, scroll to bottom → {y: 99999}, scroll right → {x: 500}. Returns the final scroll position. Useful for viewing content below the fold, triggering lazy-loaded images, or reaching elements further down the page.',
     inputSchema: z.object({
       x: z.number().default(0).describe('Horizontal scroll amount in pixels.'),
       y: z.number().default(0).describe('Vertical scroll amount in pixels.'),

@@ -15,6 +15,35 @@
 
 ---
 
+### browser_select_mode
+
+**Description:** Explicitly choose between Chrome Extension mode and headless Puppeteer mode for the current session. If Chrome Extension is connected, returns both options for the user to choose. If not connected, returns only headless.
+
+**Input Schema:**
+```json
+{}
+```
+*(No parameters required)*
+
+**Example Input:**
+```json
+{}
+```
+
+**Success Response:**
+```json
+{
+  "extensionConnected": true,
+  "options": ["extension", "headless"],
+  "currentMode": null,
+  "message": "Chrome Extension is connected. Choose a browser mode: 'extension' (your real Chrome) or 'headless' (background Puppeteer)."
+}
+```
+
+**Error Cases:** None — this tool always returns current state and available options.
+
+---
+
 ### browser_status
 
 **Description:** Check whether the Chrome Extension is connected and list all active headless Puppeteer sessions.

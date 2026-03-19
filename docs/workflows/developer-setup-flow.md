@@ -19,13 +19,11 @@ Step 1: Verify Prerequisites
    Claude Code     → must be installed in VSCode
          |
          v
-Step 2: Create Project Directory
-   mkdir -p ~/projects/browser-control-mcp
-   cd ~/projects/browser-control-mcp
+Step 2: Go to Project Directory
+   cd /media/pc/External/Project/mcp
          |
          v
 Step 3: Build MCP Server
-   cd mcp-server
    npm install
    npm run build
    → dist/ folder created with compiled JS
@@ -106,7 +104,7 @@ When new MCP Server code is released:
 
 ```
 1. Pull latest code
-2. cd mcp-server && npm install && npm run build
+2. cd /media/pc/External/Project/mcp && npm install && npm run build
 3. Restart Claude Code to reload the MCP Server
 4. Verify with browser_status
 ```
@@ -133,7 +131,7 @@ Check 4: Check config.json extensionId is correct
 
 Problem: Tests failing in development
 
-Check 1: npm test from inside mcp-server/
+Check 1: npm test from project root (/media/pc/External/Project/mcp)
 Check 2: Check if a test is using a port already in use (default test port 9998)
 Check 3: Ensure no other instance of the test is running
 ```

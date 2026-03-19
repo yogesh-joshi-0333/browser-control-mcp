@@ -10,7 +10,7 @@ export const screenshotTool: ITool = {
   name: 'browser_screenshot',
   options: {
     title: 'Browser Screenshot',
-    description: 'Take a screenshot of the active browser tab. Uses the Chrome Extension by default (extension must be connected). Pass sessionId to use a specific Puppeteer headless session, or mode="headless" to create a new one.',
+    description: 'Capture a screenshot of the current page as a PNG image. Returns the actual rendered visual — you can see and describe layout, design, text, images, errors, and any visual content. Use this after browser_navigate to see a page, after browser_click to verify what happened, or anytime you need to visually inspect the browser. Pass sessionId to screenshot a specific headless session.',
     inputSchema: z.object({
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
       mode: z.enum(['extension', 'headless']).optional().describe('Force a specific mode. Defaults to extension.')

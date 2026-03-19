@@ -6,45 +6,52 @@
 ## File and Folder Structure
 
 ```
-browser-control-mcp/
-├── mcp-server/
-│   ├── src/
-│   │   ├── index.ts              # Entry point — MCP server setup + tool registration
-│   │   ├── config.ts             # Config loading (port, extension ID, timeouts)
-│   │   ├── logger.ts             # Structured logger
-│   │   ├── types.ts              # All shared TypeScript interfaces
-│   │   ├── websocket.ts          # WebSocket server + connection manager
-│   │   ├── mode-selector.ts      # Mode prompt (extension vs headless)
-│   │   ├── puppeteer-manager.ts  # Headless session lifecycle
-│   │   ├── tools/
-│   │   │   ├── status.ts
-│   │   │   ├── screenshot.ts
-│   │   │   ├── get-url.ts
-│   │   │   ├── click.ts
-│   │   │   ├── scroll.ts
-│   │   │   ├── console-logs.ts
-│   │   │   ├── get-dom.ts
-│   │   │   ├── type.ts
-│   │   │   ├── navigate.ts
-│   │   │   ├── record-start.ts
-│   │   │   ├── record-stop.ts
-│   │   │   ├── visual-diff.ts
-│   │   │   └── run-test.ts
-│   │   └── __tests__/
-│   │       ├── status.test.ts
-│   │       ├── screenshot.test.ts
-│   │       ├── websocket.test.ts
-│   │       ├── puppeteer-manager.test.ts
-│   │       └── ...
-│   ├── dist/                     # Compiled output (gitignored)
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── eslint.config.js
+/media/pc/External/Project/mcp/
+├── src/
+│   ├── index.ts              # Entry point — MCP server setup + tool registration
+│   ├── config.ts             # Config loading (port, extension ID, timeouts)
+│   ├── logger.ts             # Structured logger
+│   ├── types.ts              # All shared TypeScript interfaces
+│   ├── websocket.ts          # WebSocket server + connection manager
+│   ├── mode-selector.ts      # Mode selection with defaultMode state
+│   ├── puppeteer-manager.ts  # Headless session lifecycle
+│   ├── tools/
+│   │   ├── select-mode.ts    # browser_select_mode
+│   │   ├── status.ts         # browser_status
+│   │   ├── screenshot.ts     # browser_screenshot
+│   │   ├── get-url.ts        # browser_get_url
+│   │   ├── navigate.ts       # browser_navigate
+│   │   ├── click.ts          # browser_click
+│   │   ├── scroll.ts         # browser_scroll
+│   │   ├── type.ts           # browser_type
+│   │   ├── get-dom.ts        # browser_get_dom
+│   │   └── console-logs.ts   # browser_console_logs
+│   └── __tests__/
+│       ├── select-mode.test.ts
+│       ├── status.test.ts
+│       ├── screenshot.test.ts
+│       ├── navigate.test.ts
+│       ├── get-url.test.ts
+│       ├── click.test.ts
+│       ├── scroll.test.ts
+│       ├── type.test.ts
+│       ├── get-dom.test.ts
+│       ├── console-logs.test.ts
+│       ├── mode-selector.test.ts
+│       ├── websocket.test.ts
+│       ├── puppeteer-manager.test.ts
+│       └── logger.test.ts
 ├── chrome-extension/
 │   ├── manifest.json
-│   ├── background.js
-│   └── content.js
-└── config.json                   # Runtime config (port, extension ID)
+│   └── background.js
+├── docs/                     # Project documentation
+├── dist/                     # Compiled output (gitignored)
+├── package.json
+├── tsconfig.json
+├── jest.config.js
+├── eslint.config.js
+├── config.json
+└── .mcp.json
 ```
 
 ---

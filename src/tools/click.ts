@@ -10,7 +10,7 @@ export const clickTool: ITool = {
   name: 'browser_click',
   options: {
     title: 'Browser Click',
-    description: 'Click an element on the page by CSS selector. Uses Chrome Extension by default, or a Puppeteer session in headless mode.',
+    description: 'Click any element on the page by CSS selector — buttons, links, menus, dropdowns, checkboxes, tabs, etc. Examples: "#submit-btn", "button[type=submit]", ".nav-link", "a.login". Waits for the element to be visible, clicks it, then waits for the page to stabilize (handles AJAX, animations, re-renders). Use browser_get_dom first if you need to find the right selector.',
     inputSchema: z.object({
       selector: z.string().describe('CSS selector of the element to click.'),
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),

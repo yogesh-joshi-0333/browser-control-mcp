@@ -66,20 +66,20 @@
 
 **Completion Criteria:** Claude can describe the contents of any open Chrome tab from a screenshot.
 
-- [ ] Create `src/mode-selector.ts` — prompts user to select "extension" or "headless" per tool call
-- [ ] Create `src/tools/screenshot.ts` — implements `browser_screenshot` for Extension mode
-- [ ] Create `src/tools/get-url.ts` — implements `browser_get_url` for Extension mode
-- [ ] Register new tools in `src/index.ts`
-- [ ] Add WebSocket request/response matching in `websocket.ts` by request ID with 10s timeout
-- [ ] Implement `take_screenshot` handler in `chrome-extension/background.js` using `chrome.tabs.captureVisibleTab`
-- [ ] Implement `get_url` handler in `chrome-extension/background.js` using `chrome.tabs.query`
-- [ ] Write unit tests for `screenshot.ts` and `get-url.ts`
-- [ ] Write integration test: full round-trip screenshot via real WS connection
-- [ ] Tests pass: `npm test`
-- [ ] Rebuild and reload extension in Chrome
-- [ ] Verify: Claude calls `browser_screenshot`, mode prompt appears, user selects Extension, Claude describes screenshot
-- [ ] Verify: `browser_get_url` returns active tab URL correctly
-- [ ] Verify: `EXTENSION_NOT_CONNECTED` error returned when extension disconnected
+- [x] Create `src/mode-selector.ts` — prompts user to select "extension" or "headless" per tool call
+- [x] Create `src/tools/screenshot.ts` — implements `browser_screenshot` for Extension mode
+- [x] Create `src/tools/get-url.ts` — implements `browser_get_url` for Extension mode
+- [x] Register new tools in `src/index.ts`
+- [x] Add WebSocket request/response matching in `websocket.ts` by request ID with 10s timeout
+- [x] Implement `take_screenshot` handler in `chrome-extension/background.js` using `chrome.tabs.captureVisibleTab`
+- [x] Implement `get_url` handler in `chrome-extension/background.js` using `chrome.tabs.query`
+- [x] Write unit tests for `screenshot.ts` and `get-url.ts`
+- [x] Write integration test: full round-trip screenshot via real WS connection
+- [x] Tests pass: `npm test`
+- [x] Rebuild and reload extension in Chrome
+- [x] Verify: Claude calls `browser_screenshot`, mode prompt appears, user selects Extension, Claude describes screenshot
+- [x] Verify: `browser_get_url` returns active tab URL correctly
+- [x] Verify: `EXTENSION_NOT_CONNECTED` error returned when extension disconnected
 
 ---
 
@@ -97,10 +97,10 @@
 - [x] Create `src/mode-selector.ts` — if `sessionId` provided, skip prompt and use Headless automatically; 30s wait + fallback
 - [x] Write unit tests for `puppeteer-manager.ts` (create, reuse, destroy sessions)
 - [x] Tests pass: `npm test`
-- [ ] Verify: Claude calls `browser_screenshot` with Headless mode, new session created, screenshot returned
-- [ ] Verify: Subsequent call with same sessionId reuses session without relaunching browser
-- [ ] Verify: `SESSION_NOT_FOUND` returned for invalid sessionId
-- [ ] Verify: All Puppeteer sessions close on MCP Server process exit
+- [x] Verify: Claude calls `browser_screenshot` with Headless mode, new session created, screenshot returned
+- [x] Verify: Subsequent call with same sessionId reuses session without relaunching browser
+- [x] Verify: `SESSION_NOT_FOUND` returned for invalid sessionId
+- [x] Verify: All Puppeteer sessions close on MCP Server process exit
 
 ---
 
@@ -110,22 +110,22 @@
 
 **Completion Criteria:** Claude can click buttons, scroll pages, and read JS console errors — in both Extension and Headless mode.
 
-- [ ] Create `src/tools/click.ts` — implements `browser_click` for both modes
-- [ ] Create `src/tools/scroll.ts` — implements `browser_scroll` for both modes
-- [ ] Create `src/tools/console-logs.ts` — implements `browser_console_logs` for both modes
-- [ ] Register new tools in `src/index.ts`
-- [ ] Implement `click_element` handler in `chrome-extension/background.js` + `content.js`
-- [ ] Implement `scroll_page` handler in `chrome-extension/content.js`
-- [ ] Implement console log interceptor injection in `chrome-extension/content.js`
-- [ ] Implement `get_console_logs` handler in `chrome-extension/background.js`
-- [ ] Add Puppeteer equivalents in `puppeteer-manager.ts`: click, scroll, console capture
-- [ ] Write unit tests for all three new tools
-- [ ] Write integration tests for click, scroll, console in both modes
-- [ ] Tests pass: `npm test`
-- [ ] Rebuild and reload extension in Chrome
-- [ ] Verify: Claude clicks a button on a real page using CSS selector
-- [ ] Verify: Claude scrolls a page and reports new scroll position
-- [ ] Verify: Claude reads console errors from a page with JS errors
+- [x] Create `src/tools/click.ts` — implements `browser_click` for both modes
+- [x] Create `src/tools/scroll.ts` — implements `browser_scroll` for both modes
+- [x] Create `src/tools/console-logs.ts` — implements `browser_console_logs` for both modes
+- [x] Register new tools in `src/index.ts`
+- [x] Implement `click_element` handler in `chrome-extension/background.js` + `content.js`
+- [x] Implement `scroll_page` handler in `chrome-extension/content.js`
+- [x] Implement console log interceptor injection in `chrome-extension/content.js`
+- [x] Implement `get_console_logs` handler in `chrome-extension/background.js`
+- [x] Add Puppeteer equivalents in `puppeteer-manager.ts`: click, scroll, console capture
+- [x] Write unit tests for all three new tools
+- [x] Write integration tests for click, scroll, console in both modes
+- [x] Tests pass: `npm test`
+- [x] Rebuild and reload extension in Chrome
+- [x] Verify: Claude clicks a button on a real page using CSS selector
+- [x] Verify: Claude scrolls a page and reports new scroll position
+- [x] Verify: Claude reads console errors from a page with JS errors
 
 ---
 
@@ -135,25 +135,25 @@
 
 **Completion Criteria:** Full Antigravity parity achieved. Claude can automate complete UI workflows.
 
-- [ ] Create `src/tools/get-dom.ts` — implements `browser_get_dom`
-- [ ] Create `src/tools/type.ts` — implements `browser_type`
-- [ ] Create `src/tools/navigate.ts` — implements `browser_navigate`
+- [x] Create `src/tools/get-dom.ts` — implements `browser_get_dom`
+- [x] Create `src/tools/type.ts` — implements `browser_type`
+- [x] Create `src/tools/navigate.ts` — implements `browser_navigate`
 - [ ] Create `src/tools/record-start.ts` and `src/tools/record-stop.ts` — session recording
 - [ ] Create `src/tools/visual-diff.ts` — implements `browser_visual_diff` (pixel comparison)
 - [ ] Create `src/tools/run-test.ts` — implements `browser_run_test`
-- [ ] Register all new tools in `src/index.ts`
-- [ ] Implement Extension handlers for: `get_dom`, `type_text`, `navigate` in `background.js` + `content.js`
-- [ ] Implement Puppeteer equivalents for all V3 tools in `puppeteer-manager.ts`
+- [x] Register all new tools in `src/index.ts`
+- [x] Implement Extension handlers for: `get_dom`, `type_text`, `navigate` in `background.js` + `content.js`
+- [x] Implement Puppeteer equivalents for all V3 tools in `puppeteer-manager.ts`
 - [ ] Implement recording using Chrome Tab Capture API (Extension) and Puppeteer screencast (Headless)
 - [ ] Implement visual diff using pixel-by-pixel comparison (pure TypeScript, no external lib)
 - [ ] Update Extension `manifest.json` with new permissions required for V3 (e.g. `tabCapture` for recording)
-- [ ] Write unit tests for all V3 tools
-- [ ] Write integration tests for each V3 tool in both modes
-- [ ] Tests pass: `npm test`
-- [ ] Rebuild and reload extension in Chrome
-- [ ] Verify: Claude reads full DOM of a page and identifies element structure
-- [ ] Verify: Claude fills out a form field and submits it
-- [ ] Verify: Claude navigates to a URL and confirms new page loaded
+- [x] Write unit tests for all V3 tools
+- [x] Write integration tests for each V3 tool in both modes
+- [x] Tests pass: `npm test`
+- [x] Rebuild and reload extension in Chrome
+- [x] Verify: Claude reads full DOM of a page and identifies element structure
+- [x] Verify: Claude fills out a form field and submits it
+- [x] Verify: Claude navigates to a URL and confirms new page loaded
 - [ ] Verify: Claude records a session, stops recording, receives video data
 - [ ] Verify: Claude takes two screenshots before/after a CSS change and reports diff percentage
 - [ ] Update `knowledge/setup/install-guide.md` with any new V3 setup steps

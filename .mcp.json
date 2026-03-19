@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "browser-control": {
+      "command": "npx",
+      "args": ["browser-control-mcp"]
+    }
+  }
+}

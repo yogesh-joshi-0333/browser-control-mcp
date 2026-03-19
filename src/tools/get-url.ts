@@ -10,7 +10,7 @@ export const getUrlTool: ITool = {
   name: 'browser_get_url',
   options: {
     title: 'Get Browser URL',
-    description: 'Get the URL of the active browser tab (Extension mode) or a Puppeteer session (Headless mode).',
+    description: 'Get the current URL of the browser page. Useful to verify navigation succeeded, check the current location after redirects, or confirm which page the browser is on.',
     inputSchema: z.object({
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
       mode: z.enum(['extension', 'headless']).optional().describe('Force a specific mode. Defaults to extension.')

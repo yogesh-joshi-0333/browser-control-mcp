@@ -7,7 +7,7 @@ jest.unstable_mockModule('../puppeteer-manager.js', () => ({
   createSession: jest.fn()
 }));
 
-const { selectMode } = await import('../mode-selector.js');
+const { selectMode, setDefaultMode, getDefaultMode, clearDefaultMode } = await import('../mode-selector.js');
 const { getConnectionState } = await import('../websocket.js');
 const { createSession } = await import('../puppeteer-manager.js');
 
@@ -17,6 +17,7 @@ const mockCreateSession = createSession as jest.MockedFunction<typeof createSess
 describe('mode-selector', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    clearDefaultMode();
   });
 
   it('auto-selects headless when sessionId provided', async () => {
@@ -49,4 +50,36 @@ describe('mode-selector', () => {
     expect(result.mode).toBe('headless');
     expect(result.sessionId).toBe('session-fallback1');
   }, 10000);
+
+  it('uses defaultMode when no forceMode provided', async () => {
+    setDefaultMode('headless');
+    mockCreateSession.mockResolvedValue('session-default1');
+    const result = await selectMode({});
+    expect(result.mode).toBe('headless');
+    expect(result.sessionId).toBe('session-default1');
+  });
+
+  it('forceMode overrides defaultMode', async () => {
+    setDefaultMode('headless');
+    mockGetConnectionState.mockReturnValue({ connected: true, socketId: 'abc' });
+    const result = await selectMode({ forceMode: 'extension' });
+    expect(result.mode).toBe('extension');
+  });
+
+  it('getDefaultMode returns null initially', () => {
+    expect(getDefaultMode()).toBeNull();
+  });
+
+  it('setDefaultMode and getDefaultMode work together', () => {
+    setDefaultMode('extension');
+    expect(getDefaultMode()).toBe('extension');
+    setDefaultMode('headless');
+    expect(getDefaultMode()).toBe('headless');
+  });
+
+  it('clearDefaultMode resets to null', () => {
+    setDefaultMode('extension');
+    clearDefaultMode();
+    expect(getDefaultMode()).toBeNull();
+  });
 });

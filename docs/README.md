@@ -1,5 +1,5 @@
 # Browser Control MCP
-**Version:** 1.0.0 | **Status:** Documentation Complete — Development Not Started | **Date:** 2026-03-18
+**Version:** 1.0.0 | **Status:** All Phases Complete — 10 Tools, 73 Tests Passing | **Date:** 2026-03-19
 
 ## Description
 
@@ -45,29 +45,35 @@ Claude Code (VSCode Extension)
 
 ---
 
-## Tools / Features Exposed to Claude
+## Tools / Features Exposed to Claude (10 Implemented)
 
-| Tool | V1 | V2 | V3 | Description |
-|------|----|----|-----|-------------|
-| `browser_status` | ✅ | | | Check extension connection + list headless sessions |
-| `browser_screenshot` | ✅ | | | Capture screenshot, returns base64 image |
-| `browser_get_url` | ✅ | | | Get current page URL |
-| `browser_click` | | ✅ | | Click element by CSS selector or coordinates |
-| `browser_scroll` | | ✅ | | Scroll page by pixels or to element |
-| `browser_console_logs` | | ✅ | | Read JS console output |
-| `browser_get_dom` | | | ✅ | Get full DOM/HTML of page |
-| `browser_type` | | | ✅ | Type text into input field |
-| `browser_navigate` | | | ✅ | Navigate to URL |
-| `browser_record_start` | | | ✅ | Start session recording |
-| `browser_record_stop` | | | ✅ | Stop recording and return video |
-| `browser_visual_diff` | | | ✅ | Compare two screenshots visually |
-| `browser_run_test` | | | ✅ | Execute automated UI test |
+| Tool | Status | Description |
+|------|--------|-------------|
+| `browser_select_mode` | ✅ | Explicitly choose extension or headless mode for the session |
+| `browser_status` | ✅ | Check extension connection + list headless sessions |
+| `browser_screenshot` | ✅ | Capture screenshot, returns base64 image |
+| `browser_get_url` | ✅ | Get current page URL |
+| `browser_navigate` | ✅ | Navigate to URL with viewport customization |
+| `browser_click` | ✅ | Click element by CSS selector or coordinates |
+| `browser_scroll` | ✅ | Scroll page by pixels or to element |
+| `browser_type` | ✅ | Type text into input field |
+| `browser_get_dom` | ✅ | Get full DOM/HTML of page |
+| `browser_console_logs` | ✅ | Read JS console output |
+
+### Not Yet Implemented (Planned)
+
+| Tool | Description |
+|------|-------------|
+| `browser_record_start` | Start session recording |
+| `browser_record_stop` | Stop recording and return video |
+| `browser_visual_diff` | Compare two screenshots visually |
+| `browser_run_test` | Execute automated UI test |
 
 ---
 
-## MANDATORY Agent Reading Checklist
+## Agent Reading Checklist
 
-**Before writing any code, every agent MUST read these files in order:**
+**Before writing any code, agents should read these files:**
 
 1. Read [RULES.md](./RULES.md)
 2. Read [AGENT-LOG.md](./AGENT-LOG.md)

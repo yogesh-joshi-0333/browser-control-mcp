@@ -26,29 +26,25 @@ The MCP Server is the central brain of the system. It runs as a Node.js/TypeScri
 ## File Structure
 
 ```
-mcp-server/
-├── src/
-│   ├── index.ts              # Entry: MCP server setup, tool registration, process signals
-│   ├── config.ts             # Load config.json, export typed config object
-│   ├── logger.ts             # Structured logger (info/warn/error)
-│   ├── types.ts              # Shared interfaces: IToolResult, IWsRequest, IWsResponse, etc.
-│   ├── websocket.ts          # WebSocket server: accept/reject connections, send/receive, heartbeat
-│   ├── mode-selector.ts      # Prompt user to choose extension or headless mode
-│   ├── puppeteer-manager.ts  # Session lifecycle: create, get, destroy, destroyAll, list
-│   └── tools/
-│       ├── status.ts         # browser_status
-│       ├── screenshot.ts     # browser_screenshot
-│       ├── get-url.ts        # browser_get_url
-│       ├── click.ts          # browser_click (V2)
-│       ├── scroll.ts         # browser_scroll (V2)
-│       ├── console-logs.ts   # browser_console_logs (V2)
-│       ├── get-dom.ts        # browser_get_dom (V3)
-│       ├── type.ts           # browser_type (V3)
-│       ├── navigate.ts       # browser_navigate (V3)
-│       ├── record-start.ts   # browser_record_start (V3)
-│       ├── record-stop.ts    # browser_record_stop (V3)
-│       ├── visual-diff.ts    # browser_visual_diff (V3)
-│       └── run-test.ts       # browser_run_test (V3)
+src/
+├── index.ts              # Entry: MCP server setup, tool registration, process signals
+├── config.ts             # Load config.json, export typed config object
+├── logger.ts             # Structured logger (info/warn/error)
+├── types.ts              # Shared interfaces: IToolResult, IWsRequest, IWsResponse, etc.
+├── websocket.ts          # WebSocket server: accept/reject connections, send/receive, heartbeat
+├── mode-selector.ts      # Mode selection with defaultMode state management
+├── puppeteer-manager.ts  # Session lifecycle: create, get, destroy, destroyAll, list
+└── tools/
+    ├── select-mode.ts    # browser_select_mode
+    ├── status.ts         # browser_status
+    ├── screenshot.ts     # browser_screenshot
+    ├── get-url.ts        # browser_get_url
+    ├── navigate.ts       # browser_navigate
+    ├── click.ts          # browser_click
+    ├── scroll.ts         # browser_scroll
+    ├── type.ts           # browser_type
+    ├── get-dom.ts        # browser_get_dom
+    └── console-logs.ts   # browser_console_logs
 ```
 
 ---
@@ -63,7 +59,10 @@ mcp-server/
 | `WebSocketServer.start()` | `websocket.ts` | Binds WS server to 127.0.0.1:port |
 | `WebSocketServer.send()` | `websocket.ts` | Sends command to extension, returns Promise with response |
 | `WebSocketServer.isConnected()` | `websocket.ts` | Returns boolean connection state |
-| `selectMode()` | `mode-selector.ts` | Prompts user and returns `"extension"` or `"headless"` |
+| `selectMode()` | `mode-selector.ts` | Returns `"extension"` or `"headless"` based on default mode or availability |
+| `setDefaultMode()` | `mode-selector.ts` | Sets session-level default mode (extension or headless) |
+| `getDefaultMode()` | `mode-selector.ts` | Returns current default mode or null |
+| `clearDefaultMode()` | `mode-selector.ts` | Clears the session default mode |
 | `SessionManager.create()` | `puppeteer-manager.ts` | Launches new Puppeteer browser, returns session ID |
 | `SessionManager.get()` | `puppeteer-manager.ts` | Returns existing session by ID or throws SESSION_NOT_FOUND |
 | `SessionManager.list()` | `puppeteer-manager.ts` | Returns all active sessions with ID and current URL |
