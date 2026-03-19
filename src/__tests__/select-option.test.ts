@@ -50,7 +50,8 @@ describe('browser_select_option', () => {
   it('selects option by value in headless mode', async () => {
     const mockPage = {
       select: jest.fn<() => Promise<string[]>>().mockResolvedValue(['US']),
-      evaluate: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
+      evaluate: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+      waitForFunction: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
     mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
@@ -68,7 +69,8 @@ describe('browser_select_option', () => {
   it('selects option by label in headless mode', async () => {
     const mockPage = {
       select: jest.fn<() => Promise<string[]>>().mockResolvedValue([]),
-      evaluate: jest.fn<() => Promise<string | undefined>>()
+      evaluate: jest.fn<() => Promise<string | undefined>>(),
+      waitForFunction: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     };
     // First call: find option by label and set value, returns the option value
     // Second call: dispatch events

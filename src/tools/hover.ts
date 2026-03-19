@@ -5,6 +5,7 @@ import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
 import { sendToExtension } from '../websocket.js';
 import { getSession } from '../puppeteer-manager.js';
+import { waitForDomStable } from '../dom-utils.js';
 
 export const hoverTool: ITool = {
   name: 'browser_hover',
@@ -78,21 +79,3 @@ export const hoverTool: ITool = {
     }
   }
 };
-
-/**
- * Waits until the DOM stops mutating for 300ms, or 3s max.
- * Handles API responses updating DOM, animations completing, re-renders.
- */
-async function waitForDomStable(page: { waitForFunction: (fn: string, opts: Record<string, unknown>) => Promise<unknown> }): Promise<void> {
-  await page.waitForFunction(`
-    new Promise(resolve => {
-      let timer;
-      const observer = new MutationObserver(() => {
-        clearTimeout(timer);
-        timer = setTimeout(() => { observer.disconnect(); resolve(true); }, 300);
-      });
-      observer.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
-      setTimeout(() => { observer.disconnect(); resolve(true); }, 3000);
-    })
-  `, { timeout: 5000 });
-}

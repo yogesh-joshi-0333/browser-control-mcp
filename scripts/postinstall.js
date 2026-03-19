@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Post-install script: ensures Chrome/Chromium is available for puppeteer-core.
- * - On Linux: installs chromium-browser via apt if not found
- * - On macOS/Windows: shows a helpful message if Chrome is missing
+ * Post-install script: checks if Chrome/Chromium is available for puppeteer-core.
+ * Shows install guidance if not found — does NOT auto-install anything.
  */
 
 import { existsSync } from 'node:fs';
@@ -57,37 +56,6 @@ function findChrome() {
   return null;
 }
 
-function autoInstallLinux() {
-  console.log('\n[browser-control-mcp] Chrome/Chromium not found. Attempting auto-install...\n');
-
-  const managers = [
-    { check: 'which apt-get', install: 'sudo apt-get update -qq && sudo apt-get install -y -qq chromium-browser || sudo apt-get install -y -qq chromium' },
-    { check: 'which dnf', install: 'sudo dnf install -y chromium' },
-    { check: 'which yum', install: 'sudo yum install -y chromium' },
-    { check: 'which pacman', install: 'sudo pacman -S --noconfirm chromium' },
-    { check: 'which apk', install: 'sudo apk add chromium' },
-  ];
-
-  for (const mgr of managers) {
-    try {
-      execSync(mgr.check, { stdio: 'pipe' });
-      console.log(`[browser-control-mcp] Installing Chromium via ${mgr.check.split(' ')[1]}...`);
-      execSync(mgr.install, { stdio: 'inherit' });
-
-      // Verify it worked
-      const found = findChrome();
-      if (found) {
-        console.log(`[browser-control-mcp] Chromium installed successfully at: ${found}\n`);
-        return true;
-      }
-    } catch {
-      // try next package manager
-    }
-  }
-
-  return false;
-}
-
 function main() {
   const chromePath = findChrome();
 
@@ -98,26 +66,25 @@ function main() {
 
   const os = platform();
 
-  if (os === 'linux') {
-    const installed = autoInstallLinux();
-    if (installed) return;
+  console.warn('\n[browser-control-mcp] Chrome/Chromium not found on this system.');
+  console.warn('The browser-control MCP server requires Chrome or Chromium to run.\n');
 
-    console.error('\n[browser-control-mcp] Could not auto-install Chromium.');
-    console.error('Please install manually:');
-    console.error('  Ubuntu/Debian: sudo apt-get install -y chromium-browser');
-    console.error('  Fedora:        sudo dnf install -y chromium');
-    console.error('  Arch:          sudo pacman -S chromium');
-    console.error('  Or set CHROME_PATH=/path/to/chrome\n');
+  if (os === 'linux') {
+    console.warn('Install Chrome with one of these commands:');
+    console.warn('  Ubuntu/Debian:  sudo apt-get install -y chromium-browser');
+    console.warn('  Fedora/RHEL:    sudo dnf install -y chromium');
+    console.warn('  Arch:           sudo pacman -S chromium');
+    console.warn('  Alpine:         sudo apk add chromium');
   } else if (os === 'darwin') {
-    console.error('\n[browser-control-mcp] Chrome not found.');
-    console.error('Please install Google Chrome from: https://www.google.com/chrome/');
-    console.error('Or install via Homebrew: brew install --cask google-chrome');
-    console.error('Or set CHROME_PATH=/path/to/chrome\n');
+    console.warn('Install Chrome:');
+    console.warn('  Download: https://www.google.com/chrome/');
+    console.warn('  Homebrew: brew install --cask google-chrome');
   } else if (os === 'win32') {
-    console.error('\n[browser-control-mcp] Chrome not found.');
-    console.error('Please install Google Chrome from: https://www.google.com/chrome/');
-    console.error('Or set CHROME_PATH=C:\\path\\to\\chrome.exe\n');
+    console.warn('Install Chrome:');
+    console.warn('  Download: https://www.google.com/chrome/');
   }
+
+  console.warn('\nOr set CHROME_PATH environment variable to your Chrome executable path.\n');
 }
 
 main();

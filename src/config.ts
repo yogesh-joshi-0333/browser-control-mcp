@@ -18,5 +18,4 @@ function loadConfig(): IConfig {
 const config = loadConfig();
 
 export const WS_PORT: number = config.wsPort;
-export const EXTENSION_ORIGIN: string = config.extensionOrigin;
 export default config;

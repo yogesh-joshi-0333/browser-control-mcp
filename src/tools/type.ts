@@ -54,6 +54,7 @@ export const typeTool: ITool = {
         await sendToExtension({ action: 'type_text', payload: { selector, text } });
       } else {
         const session = getSession(modeResult.sessionId!);
+        await session.page.waitForSelector(selector, { visible: true, timeout: 5000 });
         await session.page.type(selector, text);
       }
 

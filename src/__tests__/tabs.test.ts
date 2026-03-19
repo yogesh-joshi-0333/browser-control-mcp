@@ -11,6 +11,7 @@ jest.unstable_mockModule('../websocket.js', () => ({
 
 jest.unstable_mockModule('../puppeteer-manager.js', () => ({
   getSession: jest.fn(),
+  setSessionPage: jest.fn(),
   listSessions: jest.fn().mockReturnValue([]),
   createSession: jest.fn(),
   destroySession: jest.fn(),

@@ -5,6 +5,7 @@ import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
 import { sendToExtension } from '../websocket.js';
 import { getSession } from '../puppeteer-manager.js';
+import { waitForDomStable } from '../dom-utils.js';
 
 export const navigateBackTool: ITool = {
   name: 'browser_navigate_back',
@@ -30,6 +31,7 @@ export const navigateBackTool: ITool = {
       } else {
         const session = getSession(modeResult.sessionId!);
         await session.page.goBack({ waitUntil: 'networkidle2' });
+        await waitForDomStable(session.page);
         url = session.page.url();
       }
 

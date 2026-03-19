@@ -5,6 +5,7 @@ import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
 import { sendToExtension } from '../websocket.js';
 import { getSession } from '../puppeteer-manager.js';
+import { waitForDomStable } from '../dom-utils.js';
 
 export const selectOptionTool: ITool = {
   name: 'browser_select_option',
@@ -93,6 +94,9 @@ export const selectOptionTool: ITool = {
             }
           }
         }, selector);
+
+        // Wait for DOM to settle after selection (handles dependent dropdowns, AJAX updates)
+        await waitForDomStable(page);
       }
 
       return {

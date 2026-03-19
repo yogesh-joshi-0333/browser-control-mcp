@@ -123,6 +123,14 @@ export async function destroySession(id: string): Promise<void> {
   logger.info('Puppeteer session destroyed', { id });
 }
 
+export function setSessionPage(id: string, page: Page): void {
+  const session = sessions.get(id);
+  if (!session) {
+    throw new Error('SESSION_NOT_FOUND');
+  }
+  session.page = page;
+}
+
 export function listSessions(): string[] {
   return Array.from(sessions.keys());
 }

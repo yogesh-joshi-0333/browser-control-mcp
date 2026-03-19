@@ -4,7 +4,7 @@ import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
 import { sendToExtension } from '../websocket.js';
-import { getSession } from '../puppeteer-manager.js';
+import { getSession, setSessionPage } from '../puppeteer-manager.js';
 
 export const tabsTool: ITool = {
   name: 'browser_tabs',
@@ -91,7 +91,7 @@ export const tabsTool: ITool = {
               };
             }
             await pages[index].bringToFront();
-            (session as any).page = pages[index];
+            setSessionPage(modeResult.sessionId!, pages[index]);
             return {
               content: [{ type: 'text', text: JSON.stringify({ index, url: pages[index].url(), success: true }) }]
             };
@@ -121,7 +121,7 @@ export const tabsTool: ITool = {
             await closedPage.close();
             if (closedPage === session.page) {
               const remainingPages = await browser.pages();
-              (session as any).page = remainingPages[0];
+              setSessionPage(modeResult.sessionId!, remainingPages[0]);
             }
             return {
               content: [{ type: 'text', text: JSON.stringify({ success: true }) }]

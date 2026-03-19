@@ -63,10 +63,7 @@ export const executeTool: ITool = {
       } else {
         const session = getSession(modeResult.sessionId!);
         /* eslint-disable @typescript-eslint/no-explicit-any */
-        result = await session.page.evaluate((jsCode: string) => {
-          const fn = new Function(jsCode);
-          return fn();
-        }, `return (async () => { ${code} })()`);
+        result = await session.page.evaluate(`(async () => { ${code} })()`);
       }
 
       const resultStr = result === undefined ? 'undefined' : JSON.stringify(result);

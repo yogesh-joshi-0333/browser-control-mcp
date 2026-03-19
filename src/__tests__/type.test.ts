@@ -48,7 +48,8 @@ describe('browser_type', () => {
 
   it('types text into element in headless mode', async () => {
     const mockPage = {
-      type: jest.fn<(selector: string, text: string) => Promise<void>>().mockResolvedValue(undefined)
+      type: jest.fn<(selector: string, text: string) => Promise<void>>().mockResolvedValue(undefined),
+      waitForSelector: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
     mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });

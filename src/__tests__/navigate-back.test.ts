@@ -49,7 +49,8 @@ describe('browser_navigate_back', () => {
   it('navigates back in headless mode', async () => {
     const mockPage = {
       goBack: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-      url: jest.fn<() => string>().mockReturnValue('https://example.com')
+      url: jest.fn<() => string>().mockReturnValue('https://example.com'),
+      waitForFunction: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
     mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
