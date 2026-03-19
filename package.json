@@ -43,11 +43,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tech-ark-yogesh/browser-control-mcp.git"
+    "url": "git+https://github.com/yogesh-joshi-0333/browser-control-mcp.git"
   },
-  "homepage": "https://github.com/tech-ark-yogesh/browser-control-mcp#readme",
+  "homepage": "https://github.com/yogesh-joshi-0333/browser-control-mcp#readme",
   "bugs": {
-    "url": "https://github.com/tech-ark-yogesh/browser-control-mcp/issues"
+    "url": "https://github.com/yogesh-joshi-0333/browser-control-mcp/issues"
   },
   "engines": {
     "node": ">=18.0.0"
