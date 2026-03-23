@@ -3,7 +3,6 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
-import { sendToExtension } from '../websocket.js';
 import { getSession } from '../puppeteer-manager.js';
 
 export const executeTool: ITool = {
@@ -31,14 +30,14 @@ export const executeTool: ITool = {
         'For async operations, return a Promise.'
       ),
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
-      mode: z.enum(['extension', 'headless']).optional().describe('Force a specific mode. Defaults to extension.')
+      mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode. Defaults to extension.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
     const { code, sessionId, mode } = args as {
       code?: string;
       sessionId?: string;
-      mode?: 'extension' | 'headless';
+      mode?: 'headless' | 'connect';
     };
 
     if (!code) {
@@ -55,16 +54,9 @@ export const executeTool: ITool = {
       const modeResult = await selectMode({ sessionId, forceMode: mode });
       logger.info('browser_execute', { mode: modeResult.mode, sessionId: modeResult.sessionId, codeLength: code.length });
 
-      let result: unknown;
-
-      if (modeResult.mode === 'extension') {
-        const response = await sendToExtension({ action: 'execute_script', payload: { code } });
-        result = response.result;
-      } else {
-        const session = getSession(modeResult.sessionId!);
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        result = await session.page.evaluate(`(async () => { ${code} })()`);
-      }
+      const session = getSession(modeResult.sessionId!);
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      const result = await session.page.evaluate(`(async () => { ${code} })()`);
 
       const resultStr = result === undefined ? 'undefined' : JSON.stringify(result);
 

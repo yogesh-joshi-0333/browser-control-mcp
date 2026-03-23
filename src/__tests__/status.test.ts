@@ -1,9 +1,7 @@
 import { describe, it, expect, jest } from '@jest/globals';
 
-jest.unstable_mockModule('../websocket.js', () => ({
-  getConnectionState: jest.fn().mockReturnValue({ connected: false, socketId: null })
-}));
 jest.unstable_mockModule('../puppeteer-manager.js', () => ({
+  isDebugChromeRunning: jest.fn<() => Promise<boolean>>().mockResolvedValue(false),
   listSessions: jest.fn().mockReturnValue([])
 }));
 
@@ -14,12 +12,12 @@ describe('browser_status tool', () => {
     expect(statusTool.name).toBe('browser_status');
   });
 
-  it('returns extensionConnected: false when not connected', async () => {
+  it('returns connectAvailable: false when not available', async () => {
     const result = await statusTool.handler({});
     const content = result.content[0];
     if (content.type !== 'text') throw new Error('Expected text content');
     const data = JSON.parse(content.text);
-    expect(data.extensionConnected).toBe(false);
+    expect(data.connectAvailable).toBe(false);
   });
 
   it('returns empty headlessSessions array', async () => {
@@ -38,7 +36,7 @@ describe('browser_status tool', () => {
   it('returns structuredContent with correct shape', async () => {
     const result = await statusTool.handler({});
     expect(result.structuredContent).toEqual({
-      extensionConnected: false,
+      connectAvailable: false,
       headlessSessions: []
     });
   });

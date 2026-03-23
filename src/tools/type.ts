@@ -3,7 +3,6 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
-import { sendToExtension } from '../websocket.js';
 import { getSession } from '../puppeteer-manager.js';
 
 export const typeTool: ITool = {
@@ -15,7 +14,7 @@ export const typeTool: ITool = {
       selector: z.string().describe('CSS selector of the element to type into.'),
       text: z.string().describe('Text to type into the element.'),
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
-      mode: z.enum(['extension', 'headless']).optional().describe('Force a specific mode. Defaults to extension.')
+      mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode. Defaults to extension.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
@@ -23,7 +22,7 @@ export const typeTool: ITool = {
       selector?: string;
       text?: string;
       sessionId?: string;
-      mode?: 'extension' | 'headless';
+      mode?: 'headless' | 'connect';
     };
 
     if (!selector) {
@@ -50,13 +49,9 @@ export const typeTool: ITool = {
       const modeResult = await selectMode({ sessionId, forceMode: mode });
       logger.info('browser_type', { mode: modeResult.mode, sessionId: modeResult.sessionId, selector });
 
-      if (modeResult.mode === 'extension') {
-        await sendToExtension({ action: 'type_text', payload: { selector, text } });
-      } else {
-        const session = getSession(modeResult.sessionId!);
-        await session.page.waitForSelector(selector, { visible: true, timeout: 5000 });
-        await session.page.type(selector, text);
-      }
+      const session = getSession(modeResult.sessionId!);
+      await session.page.waitForSelector(selector, { visible: true, timeout: 5000 });
+      await session.page.type(selector, text);
 
       return {
         content: [{ type: 'text', text: JSON.stringify({ success: true }) }]

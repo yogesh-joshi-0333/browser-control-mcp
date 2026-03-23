@@ -22,9 +22,7 @@ import { fileUploadTool } from './tools/file-upload.js';
 import { dragDropTool } from './tools/drag-drop.js';
 import { tabsTool } from './tools/tabs.js';
 import { navigateBackTool } from './tools/navigate-back.js';
-import { startWebSocketServer, stopWebSocketServer } from './websocket.js';
 import { destroyAll } from './puppeteer-manager.js';
-import { WS_PORT } from './config.js';
 import type { ITool } from './types.js';
 
 const tools: ITool[] = [
@@ -52,14 +50,11 @@ const tools: ITool[] = [
 
 async function shutdown(): Promise<void> {
   logger.info('Shutting down browser-control MCP server...');
-  await stopWebSocketServer();
   await destroyAll();
   process.exit(0);
 }
 
 async function main(): Promise<void> {
-  await startWebSocketServer(WS_PORT);
-
   process.on('SIGTERM', () => { void shutdown(); });
   process.on('SIGINT', () => { void shutdown(); });
 
@@ -72,7 +67,7 @@ async function main(): Promise<void> {
         '',
         '=== CAPABILITIES ===',
         'You can do ALL of the following:',
-        '- Open a browser (headless background browser OR the user\'s real Chrome via extension)',
+        '- Open a browser (headless background browser OR connect to the user\'s real Chrome via debug port)',
         '- Navigate to ANY URL: public websites, localhost, web apps, admin panels, any page',
         '- Take screenshots and visually analyze what you see (layout, design, content, errors)',
         '- Click ANY element: buttons, links, menus, dropdowns, tabs, checkboxes, radio buttons',
@@ -93,15 +88,17 @@ async function main(): Promise<void> {
         '   - Has anti-bot detection bypass (spoofed user agent, no webdriver flag)',
         '   - Sessions persist: the sessionId returned lets you reuse the same browser across calls',
         '',
-        '2. EXTENSION MODE (mode="extension"): Controls the user\'s real Chrome browser.',
+        '2. CONNECT MODE (mode="connect"): Connects to the user\'s real Chrome browser via CDP.',
         '   - Best for: seeing what the user sees, debugging their actual browser tab',
-        '   - Requires Chrome Extension to be installed and connected',
+        '   - Requires Chrome to be running with --remote-debugging-port=9222',
+        '   - If Chrome is not running with debug port, connect mode will auto-launch it for you',
         '   - Works on whatever tab the user has open',
         '',
         '=== HOW TO USE — STEP BY STEP ===',
         'Step 1: Call browser_select_mode to check what modes are available and set a default.',
-        '  - If extension is connected: ask user which mode they prefer',
-        '  - If extension is NOT connected: headless is auto-selected',
+        '  - Connect mode connects to real Chrome via CDP debug port',
+        '  - If Chrome is available with debug port: ask user which mode they prefer',
+        '  - If Chrome is NOT available: headless is auto-selected',
         'Step 2: Call browser_navigate with a URL to open the page.',
         '  - Pass width and height to set viewport size (e.g. width=375, height=812 for mobile)',
         '  - The sessionId returned must be passed to ALL subsequent calls for this browser session',
@@ -114,13 +111,13 @@ async function main(): Promise<void> {
         '=== TOOL REFERENCE WITH ALL PARAMETERS ===',
         '',
         'browser_select_mode — Choose browser mode for the session',
-        '  Params: mode (optional, "extension" or "headless") — set the session default',
+        '  Params: mode (optional, "connect" or "headless") — set the session default',
         '  Call with no params to query available modes. Call with mode to set default.',
-        '  Returns: extensionConnected, available options, currentMode, message',
+        '  Returns: connectAvailable, available options, currentMode, message',
         '',
         'browser_status — Check connection status',
         '  Params: none',
-        '  Returns: extensionConnected (boolean), headlessSessions (list of active session IDs)',
+        '  Returns: connectAvailable (boolean), headlessSessions (list of active session IDs)',
         '',
         'browser_navigate — Open any URL in the browser',
         '  Params:',
@@ -128,7 +125,7 @@ async function main(): Promise<void> {
         '    width (optional, number) — viewport width in pixels (headless only, default 1024)',
         '    height (optional, number) — viewport height in pixels (headless only, default 768)',
         '    sessionId (optional, string) — reuse an existing headless session',
-        '    mode (optional, "extension" or "headless") — override session default',
+        '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: url (final URL after navigation), sessionId',
         '  IMPORTANT: Save the returned sessionId and pass it to all subsequent tool calls!',
         '  Viewport examples: desktop=1920x1080, laptop=1366x768, tablet=768x1024, mobile=375x812',
@@ -136,7 +133,7 @@ async function main(): Promise<void> {
         'browser_screenshot — Capture what the page looks like right now',
         '  Params:',
         '    sessionId (optional, string) — the headless session to screenshot',
-        '    mode (optional, "extension" or "headless") — override session default',
+        '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: PNG image as base64 (rendered as an image you can see and describe)',
         '',
         'browser_click — Click any element on the page (human-like by default)',
@@ -146,7 +143,7 @@ async function main(): Promise<void> {
         '      true: moves mouse to element center, fires mouseover→mouseenter→mousemove→mousedown→focus→mouseup→click',
         '      false: simple el.click() — faster but may not work with Select2/jQuery/custom dropdowns',
         '    sessionId (optional, string) — headless session ID',
-        '    mode (optional, "extension" or "headless") — override session default',
+        '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { success: true }',
         '  Selector examples: "#submit-btn", "button[type=submit]", ".nav-link", "a.login", ".select2-selection"',
         '  Works with: regular buttons, Select2 dropdowns, jQuery UI widgets, custom JS menus, any clickable element',
@@ -157,7 +154,7 @@ async function main(): Promise<void> {
         '    selector (REQUIRED, string) — CSS selector of the input/textarea to type into',
         '    text (REQUIRED, string) — the text to type',
         '    sessionId (optional, string) — headless session ID',
-        '    mode (optional, "extension" or "headless") — override session default',
+        '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { success: true }',
         '  Works with: text inputs, password fields, search bars, textareas, contenteditable elements',
         '',
@@ -166,20 +163,20 @@ async function main(): Promise<void> {
         '    x (optional, number, default 0) — horizontal scroll in pixels (positive=right, negative=left)',
         '    y (optional, number, default 0) — vertical scroll in pixels (positive=down, negative=up)',
         '    sessionId (optional, string) — headless session ID',
-        '    mode (optional, "extension" or "headless") — override session default',
+        '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { scrollX, scrollY } — final scroll position',
         '  Examples: scroll down 500px → y=500, scroll up → y=-500, scroll to bottom → y=99999',
         '',
         'browser_get_url — Get the current page URL',
         '  Params:',
         '    sessionId (optional, string) — headless session ID',
-        '    mode (optional, "extension" or "headless") — override session default',
+        '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { url } — the current page URL',
         '',
         'browser_get_dom — Get full HTML source of the current page',
         '  Params:',
         '    sessionId (optional, string) — headless session ID',
-        '    mode (optional, "extension" or "headless") — override session default',
+        '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { dom } — complete HTML content of the page',
         '  Useful for: finding CSS selectors, understanding page structure, checking element attributes',
         '',
@@ -187,7 +184,7 @@ async function main(): Promise<void> {
         '  Params:',
         '    code (REQUIRED, string) — JavaScript to execute in the page context',
         '    sessionId (optional, string) — headless session ID',
-        '    mode (optional, "extension" or "headless") — override session default',
+        '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { result } — the return value of your code',
         '  Has full access to: window, document, jQuery ($), and all page globals',
         '  USE CASES:',
@@ -202,7 +199,7 @@ async function main(): Promise<void> {
         'browser_console_logs — Read JavaScript console output',
         '  Params:',
         '    sessionId (optional, string) — headless session ID',
-        '    mode (optional, "extension" or "headless") — override session default',
+        '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { logs: [{ type, text, timestamp }] } — array of console messages',
         '  Log types: "log", "warn", "error", "info", "debug"',
         '  Useful for: debugging JS errors, checking API responses, finding runtime issues',

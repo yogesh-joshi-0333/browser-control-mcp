@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
-import { getConnectionState } from '../websocket.js';
+import { isDebugChromeRunning } from '../puppeteer-manager.js';
 import { getDefaultMode, setDefaultMode } from '../mode-selector.js';
 import type { BrowserMode } from '../mode-selector.js';
 
@@ -12,31 +12,31 @@ export const selectModeTool: ITool = {
     title: 'Select Browser Mode',
     description:
       'Check available browser modes and set the session default. CALL THIS FIRST before using any other browser tool. ' +
-      'Two modes: "extension" (controls user\'s real Chrome browser, requires extension installed) or "headless" (invisible background Puppeteer browser, always available). ' +
-      'Call without params to see what is available. Call with mode="headless" or mode="extension" to set the default for all subsequent calls. ' +
+      'Two modes: "connect" (connects to user\'s Chrome via debug port) or "headless" (invisible background Puppeteer browser, always available). ' +
+      'Call without params to see what is available. Call with mode="headless" or mode="connect" to set the default for all subsequent calls. ' +
       'If only headless is available, it is auto-selected.',
     inputSchema: z.object({
-      mode: z.enum(['extension', 'headless']).optional().describe(
+      mode: z.enum(['headless', 'connect']).optional().describe(
         'Set the default browser mode for this session. Omit to just query available options.'
       )
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
     const { mode } = args as { mode?: BrowserMode };
-    const extensionConnected = getConnectionState().connected;
-    const options: BrowserMode[] = extensionConnected
-      ? ['extension', 'headless']
+    const connectAvailable = await isDebugChromeRunning();
+    const options: BrowserMode[] = connectAvailable
+      ? ['headless', 'connect']
       : ['headless'];
 
     if (mode) {
-      if (mode === 'extension' && !extensionConnected) {
+      if (mode === 'connect' && !connectAvailable) {
         return {
           isError: true,
           content: [{
             type: 'text',
             text: JSON.stringify({
-              code: 'EXTENSION_NOT_AVAILABLE',
-              message: 'Chrome Extension is not connected. Only headless mode is available.'
+              code: 'CONNECT_NOT_AVAILABLE',
+              message: 'Chrome debug port not found. Only headless mode is available. To enable connect mode, launch Chrome with --remote-debugging-port=9222'
             })
           }]
         };
@@ -48,17 +48,17 @@ export const selectModeTool: ITool = {
     const currentMode = getDefaultMode();
 
     let message: string;
-    if (extensionConnected) {
-      message = 'Chrome browser extension detected. Available modes: "extension" (your real Chrome browser) or "headless" (background Puppeteer browser). Which would you like to use?';
+    if (connectAvailable) {
+      message = 'Chrome debug port detected (connect mode available). Available modes: "connect" (your running Chrome browser) or "headless" (background Puppeteer browser). Which would you like to use?';
     } else {
-      message = 'Chrome extension not connected. Using headless mode (background Puppeteer browser).';
+      message = 'Chrome debug port not found. Headless mode available. To enable connect mode, launch Chrome with --remote-debugging-port=9222';
     }
 
     return {
       content: [{
         type: 'text',
         text: JSON.stringify({
-          extensionConnected,
+          connectAvailable,
           options,
           currentMode,
           message

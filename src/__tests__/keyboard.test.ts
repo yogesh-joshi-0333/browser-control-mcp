@@ -4,46 +4,20 @@ jest.unstable_mockModule('../mode-selector.js', () => ({
   selectMode: jest.fn()
 }));
 
-jest.unstable_mockModule('../websocket.js', () => ({
-  sendToExtension: jest.fn(),
-  getConnectionState: jest.fn().mockReturnValue({ connected: false, socketId: null })
-}));
-
 jest.unstable_mockModule('../puppeteer-manager.js', () => ({
-  getSession: jest.fn(),
-  listSessions: jest.fn().mockReturnValue([]),
-  createSession: jest.fn(),
-  destroySession: jest.fn(),
-  destroyAll: jest.fn()
+  getSession: jest.fn()
 }));
 
 const { keyboardTool } = await import('../tools/keyboard.js');
 const { selectMode } = await import('../mode-selector.js');
-const { sendToExtension } = await import('../websocket.js');
 const { getSession } = await import('../puppeteer-manager.js');
 
 const mockSelectMode = selectMode as jest.MockedFunction<typeof selectMode>;
-const mockSendToExtension = sendToExtension as jest.MockedFunction<typeof sendToExtension>;
 const mockGetSession = getSession as jest.MockedFunction<typeof getSession>;
 
 describe('browser_keyboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('presses key in extension mode', async () => {
-    mockSelectMode.mockResolvedValue({ mode: 'extension' });
-    mockSendToExtension.mockResolvedValue({ success: true });
-
-    const result = await keyboardTool.handler({ key: 'Enter' });
-
-    expect(result.isError).toBeFalsy();
-    expect(mockSendToExtension).toHaveBeenCalledWith({
-      action: 'press_key',
-      payload: { key: 'Enter', modifiers: undefined, selector: undefined }
-    });
-    const parsed = JSON.parse((result.content[0] as { text: string }).text);
-    expect(parsed.success).toBe(true);
   });
 
   it('presses key in headless mode', async () => {

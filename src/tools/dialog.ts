@@ -3,7 +3,6 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
-import { sendToExtension } from '../websocket.js';
 import { getSession } from '../puppeteer-manager.js';
 
 export const dialogTool: ITool = {
@@ -14,8 +13,8 @@ export const dialogTool: ITool = {
     inputSchema: z.object({
       action: z.enum(['accept', 'dismiss']).describe('Accept or dismiss the dialog'),
       promptText: z.string().optional().describe('Text to enter if the dialog is a prompt()'),
-      sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
-      mode: z.enum(['extension', 'headless']).optional().describe('Force a specific mode. Defaults to extension.')
+      sessionId: z.string().optional().describe('Puppeteer session ID. Skips mode selection.'),
+      mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
@@ -23,7 +22,7 @@ export const dialogTool: ITool = {
       action?: 'accept' | 'dismiss';
       promptText?: string;
       sessionId?: string;
-      mode?: 'extension' | 'headless';
+      mode?: 'headless' | 'connect';
     };
 
     if (!action) {
@@ -40,18 +39,14 @@ export const dialogTool: ITool = {
       const modeResult = await selectMode({ sessionId, forceMode: mode });
       logger.info('browser_handle_dialog', { mode: modeResult.mode, sessionId: modeResult.sessionId, action });
 
-      if (modeResult.mode === 'extension') {
-        await sendToExtension({ action: 'handle_dialog', payload: { action, promptText } });
-      } else {
-        const session = getSession(modeResult.sessionId!);
-        session.page.once('dialog', async (dialog) => {
-          if (action === 'accept') {
-            await dialog.accept(promptText);
-          } else {
-            await dialog.dismiss();
-          }
-        });
-      }
+      const session = getSession(modeResult.sessionId!);
+      session.page.once('dialog', async (dialog) => {
+        if (action === 'accept') {
+          await dialog.accept(promptText);
+        } else {
+          await dialog.dismiss();
+        }
+      });
 
       const verb = action === 'accept' ? 'accept' : 'dismiss';
       return {

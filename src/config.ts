@@ -5,17 +5,25 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 interface IConfig {
-  wsPort: number;
-  extensionOrigin: string;
+  debugPort: number;
 }
+
+const DEFAULTS: IConfig = {
+  debugPort: 9222,
+};
 
 function loadConfig(): IConfig {
   const configPath = join(__dirname, '..', 'config.json');
-  const raw = readFileSync(configPath, 'utf-8');
-  return JSON.parse(raw) as IConfig;
+  try {
+    const raw = readFileSync(configPath, 'utf-8');
+    const parsed = JSON.parse(raw) as Partial<IConfig>;
+    return { ...DEFAULTS, ...parsed };
+  } catch {
+    return { ...DEFAULTS };
+  }
 }
 
 const config = loadConfig();
 
-export const WS_PORT: number = config.wsPort;
+export const DEBUG_PORT: number = config.debugPort;
 export default config;

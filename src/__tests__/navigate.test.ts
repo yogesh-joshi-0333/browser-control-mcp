@@ -4,43 +4,20 @@ jest.unstable_mockModule('../mode-selector.js', () => ({
   selectMode: jest.fn()
 }));
 
-jest.unstable_mockModule('../websocket.js', () => ({
-  sendToExtension: jest.fn(),
-  getConnectionState: jest.fn().mockReturnValue({ connected: false, socketId: null })
-}));
-
 jest.unstable_mockModule('../puppeteer-manager.js', () => ({
-  getSession: jest.fn(),
-  listSessions: jest.fn().mockReturnValue([]),
-  createSession: jest.fn(),
-  destroySession: jest.fn(),
-  destroyAll: jest.fn()
+  getSession: jest.fn()
 }));
 
 const { navigateTool } = await import('../tools/navigate.js');
 const { selectMode } = await import('../mode-selector.js');
-const { sendToExtension } = await import('../websocket.js');
 const { getSession } = await import('../puppeteer-manager.js');
 
 const mockSelectMode = selectMode as jest.MockedFunction<typeof selectMode>;
-const mockSendToExtension = sendToExtension as jest.MockedFunction<typeof sendToExtension>;
 const mockGetSession = getSession as jest.MockedFunction<typeof getSession>;
 
 describe('browser_navigate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('navigates in extension mode and returns final url', async () => {
-    mockSelectMode.mockResolvedValue({ mode: 'extension' });
-    mockSendToExtension.mockResolvedValue({ url: 'https://example.com' });
-
-    const result = await navigateTool.handler({ url: 'https://example.com' });
-
-    expect(result.isError).toBeFalsy();
-    const parsed = JSON.parse((result.content[0] as { text: string }).text);
-    expect(parsed.url).toBe('https://example.com');
-    expect(mockSendToExtension).toHaveBeenCalledWith({ action: 'navigate', payload: { url: 'https://example.com' } });
   });
 
   it('navigates in headless mode using page.goto', async () => {
@@ -68,7 +45,7 @@ describe('browser_navigate', () => {
     expect(parsed.code).toBe('INVALID_URL');
   });
 
-  it('returns error when extension not connected', async () => {
+  it('returns error when mode selection fails', async () => {
     mockSelectMode.mockRejectedValue({ code: 'EXTENSION_NOT_CONNECTED', message: 'Not connected' });
 
     const result = await navigateTool.handler({ url: 'https://example.com' });

@@ -1,9 +1,11 @@
 import puppeteer from 'puppeteer-core';
 import type { Browser, Page } from 'puppeteer-core';
 import { nanoid } from 'nanoid';
-import { execSync } from 'node:child_process';
+import { execSync, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import http from 'node:http';
 import { logger } from './logger.js';
+import { DEBUG_PORT } from './config.js';
 import type { IErrorResponse } from './types.js';
 
 interface ISession {
@@ -139,4 +141,79 @@ export async function destroyAll(): Promise<void> {
   const ids = listSessions();
   await Promise.all(ids.map(id => destroySession(id)));
   logger.info('All Puppeteer sessions destroyed');
+}
+
+export function isDebugChromeRunning(port: number = DEBUG_PORT): Promise<boolean> {
+  return new Promise((resolve) => {
+    const req = http.get(`http://127.0.0.1:${port}/json/version`, { timeout: 2000 }, (res) => {
+      resolve(res.statusCode === 200);
+      res.resume(); // drain response
+    });
+    req.on('error', () => resolve(false));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
+export async function launchDebugChrome(port: number = DEBUG_PORT): Promise<void> {
+  const chromePath = findChromePath();
+  logger.info('Launching debug Chrome', { path: chromePath, port });
+
+  const child = spawn(chromePath, [
+    `--remote-debugging-port=${port}`,
+    '--no-first-run',
+    '--no-default-browser-check',
+  ], {
+    detached: true,
+    stdio: 'ignore',
+  });
+  child.unref();
+
+  const maxWait = 15_000;
+  const interval = 500;
+  const start = Date.now();
+
+  while (Date.now() - start < maxWait) {
+    await new Promise((r) => setTimeout(r, interval));
+    if (await isDebugChromeRunning(port)) {
+      logger.info('Debug Chrome is ready', { port });
+      return;
+    }
+  }
+
+  throw new Error(`Chrome did not start on port ${port} within ${maxWait / 1000} seconds`);
+}
+
+export async function createConnectSession(port: number = DEBUG_PORT): Promise<string> {
+  const id = `connect-${nanoid(8)}`;
+
+  if (!(await isDebugChromeRunning(port))) {
+    await launchDebugChrome(port);
+  }
+
+  const browserURL = `http://127.0.0.1:${port}`;
+  logger.info('Connecting to debug Chrome via CDP', { browserURL });
+
+  const browser = await puppeteer.connect({ browserURL });
+
+  const pages = await browser.pages();
+  const page = pages[0] ?? await browser.newPage();
+
+  // Apply same anti-bot protections as createSession()
+  await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => false });
+  });
+
+  // Console log capture
+  const sessionLogs: Array<{ type: string; text: string; timestamp: string }> = [];
+  page.on('console', (msg) => {
+    sessionLogs.push({ type: msg.type(), text: msg.text(), timestamp: new Date().toISOString() });
+  });
+
+  sessions.set(id, { id, browser, page, createdAt: new Date(), logs: sessionLogs });
+  logger.info('CDP connect session created', { id });
+  return id;
 }

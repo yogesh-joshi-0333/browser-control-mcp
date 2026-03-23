@@ -4,47 +4,21 @@ jest.unstable_mockModule('../mode-selector.js', () => ({
   selectMode: jest.fn()
 }));
 
-jest.unstable_mockModule('../websocket.js', () => ({
-  sendToExtension: jest.fn(),
-  getConnectionState: jest.fn().mockReturnValue({ connected: false, socketId: null })
-}));
-
 jest.unstable_mockModule('../puppeteer-manager.js', () => ({
   getSession: jest.fn(),
-  setSessionPage: jest.fn(),
-  listSessions: jest.fn().mockReturnValue([]),
-  createSession: jest.fn(),
-  destroySession: jest.fn(),
-  destroyAll: jest.fn()
+  setSessionPage: jest.fn()
 }));
 
 const { tabsTool } = await import('../tools/tabs.js');
 const { selectMode } = await import('../mode-selector.js');
-const { sendToExtension } = await import('../websocket.js');
 const { getSession } = await import('../puppeteer-manager.js');
 
 const mockSelectMode = selectMode as jest.MockedFunction<typeof selectMode>;
-const mockSendToExtension = sendToExtension as jest.MockedFunction<typeof sendToExtension>;
 const mockGetSession = getSession as jest.MockedFunction<typeof getSession>;
 
 describe('browser_tabs', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('lists tabs in extension mode', async () => {
-    mockSelectMode.mockResolvedValue({ mode: 'extension' });
-    mockSendToExtension.mockResolvedValue({ tabs: [{ index: 0, url: 'https://example.com', title: 'Example' }] });
-
-    const result = await tabsTool.handler({ action: 'list' });
-
-    expect(result.isError).toBeFalsy();
-    expect(mockSendToExtension).toHaveBeenCalledWith({
-      action: 'manage_tabs',
-      payload: { action: 'list', url: undefined, index: undefined }
-    });
-    const parsed = JSON.parse((result.content[0] as { text: string }).text);
-    expect(parsed.tabs).toBeDefined();
   });
 
   it('lists tabs in headless mode', async () => {

@@ -4,46 +4,20 @@ jest.unstable_mockModule('../mode-selector.js', () => ({
   selectMode: jest.fn()
 }));
 
-jest.unstable_mockModule('../websocket.js', () => ({
-  sendToExtension: jest.fn(),
-  getConnectionState: jest.fn().mockReturnValue({ connected: false, socketId: null })
-}));
-
 jest.unstable_mockModule('../puppeteer-manager.js', () => ({
-  getSession: jest.fn(),
-  listSessions: jest.fn().mockReturnValue([]),
-  createSession: jest.fn(),
-  destroySession: jest.fn(),
-  destroyAll: jest.fn()
+  getSession: jest.fn()
 }));
 
 const { dragDropTool } = await import('../tools/drag-drop.js');
 const { selectMode } = await import('../mode-selector.js');
-const { sendToExtension } = await import('../websocket.js');
 const { getSession } = await import('../puppeteer-manager.js');
 
 const mockSelectMode = selectMode as jest.MockedFunction<typeof selectMode>;
-const mockSendToExtension = sendToExtension as jest.MockedFunction<typeof sendToExtension>;
 const mockGetSession = getSession as jest.MockedFunction<typeof getSession>;
 
 describe('browser_drag_drop', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('drags in extension mode', async () => {
-    mockSelectMode.mockResolvedValue({ mode: 'extension' });
-    mockSendToExtension.mockResolvedValue({ success: true });
-
-    const result = await dragDropTool.handler({ sourceSelector: '#card-1', targetSelector: '#column-2' });
-
-    expect(result.isError).toBeFalsy();
-    expect(mockSendToExtension).toHaveBeenCalledWith({
-      action: 'drag_drop',
-      payload: { sourceSelector: '#card-1', targetSelector: '#column-2' }
-    });
-    const parsed = JSON.parse((result.content[0] as { text: string }).text);
-    expect(parsed.success).toBe(true);
   });
 
   it('drags in headless mode', async () => {

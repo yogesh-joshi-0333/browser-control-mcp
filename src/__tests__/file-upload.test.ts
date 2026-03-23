@@ -4,47 +4,20 @@ jest.unstable_mockModule('../mode-selector.js', () => ({
   selectMode: jest.fn()
 }));
 
-jest.unstable_mockModule('../websocket.js', () => ({
-  sendToExtension: jest.fn(),
-  getConnectionState: jest.fn().mockReturnValue({ connected: false, socketId: null })
-}));
-
 jest.unstable_mockModule('../puppeteer-manager.js', () => ({
-  getSession: jest.fn(),
-  listSessions: jest.fn().mockReturnValue([]),
-  createSession: jest.fn(),
-  destroySession: jest.fn(),
-  destroyAll: jest.fn()
+  getSession: jest.fn()
 }));
 
 const { fileUploadTool } = await import('../tools/file-upload.js');
 const { selectMode } = await import('../mode-selector.js');
-const { sendToExtension } = await import('../websocket.js');
 const { getSession } = await import('../puppeteer-manager.js');
 
 const mockSelectMode = selectMode as jest.MockedFunction<typeof selectMode>;
-const mockSendToExtension = sendToExtension as jest.MockedFunction<typeof sendToExtension>;
 const mockGetSession = getSession as jest.MockedFunction<typeof getSession>;
 
 describe('browser_file_upload', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('uploads file in extension mode', async () => {
-    mockSelectMode.mockResolvedValue({ mode: 'extension' });
-    mockSendToExtension.mockResolvedValue({ success: true });
-
-    const result = await fileUploadTool.handler({ selector: 'input[type=file]', paths: ['/home/user/document.pdf'] });
-
-    expect(result.isError).toBeFalsy();
-    expect(mockSendToExtension).toHaveBeenCalledWith({
-      action: 'file_upload',
-      payload: { selector: 'input[type=file]', paths: ['/home/user/document.pdf'] }
-    });
-    const parsed = JSON.parse((result.content[0] as { text: string }).text);
-    expect(parsed.success).toBe(true);
-    expect(parsed.filesUploaded).toBe(1);
   });
 
   it('uploads file in headless mode', async () => {

@@ -3,7 +3,6 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
-import { sendToExtension } from '../websocket.js';
 import { getSession } from '../puppeteer-manager.js';
 import { waitForDomStable } from '../dom-utils.js';
 
@@ -17,7 +16,7 @@ export const selectOptionTool: ITool = {
       value: z.string().optional().describe('Option value attribute to select.'),
       label: z.string().optional().describe('Visible text of the option to select.'),
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
-      mode: z.enum(['extension', 'headless']).optional().describe('Force a specific mode. Defaults to extension.')
+      mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode. Defaults to extension.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
@@ -26,7 +25,7 @@ export const selectOptionTool: ITool = {
       value?: string;
       label?: string;
       sessionId?: string;
-      mode?: 'extension' | 'headless';
+      mode?: 'headless' | 'connect';
     };
 
     if (!selector) {
@@ -55,49 +54,44 @@ export const selectOptionTool: ITool = {
 
       let selectedValue: string | undefined;
 
-      if (modeResult.mode === 'extension') {
-        await sendToExtension({ action: 'select_option', payload: { selector, value, label } });
-        selectedValue = value ?? label;
-      } else {
-        const session = getSession(modeResult.sessionId!);
-        const page = session.page;
+      const session = getSession(modeResult.sessionId!);
+      const page = session.page;
 
-        if (value) {
-          await page.select(selector, value);
-          selectedValue = value;
-        } else if (label) {
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-          selectedValue = await page.evaluate((sel: string, lbl: string) => {
-            const win = globalThis as any;
-            const select = win.document.querySelector(sel);
-            if (!select) throw new Error('Element not found');
-            const options = Array.from(select.options) as any[];
-            const opt = options.find((o: any) => o.textContent?.trim() === lbl);
-            if (opt) {
-              select.value = opt.value;
-              return opt.value as string;
-            }
-            return undefined;
-          }, selector, label) as string | undefined;
-        }
-
-        // Dispatch change and input events, trigger jQuery if available
+      if (value) {
+        await page.select(selector, value);
+        selectedValue = value;
+      } else if (label) {
         /* eslint-disable @typescript-eslint/no-explicit-any */
-        await page.evaluate((sel: string) => {
+        selectedValue = await page.evaluate((sel: string, lbl: string) => {
           const win = globalThis as any;
-          const el = win.document.querySelector(sel);
-          if (el) {
-            el.dispatchEvent(new (win.Event)('change', { bubbles: true }));
-            el.dispatchEvent(new (win.Event)('input', { bubbles: true }));
-            if (win.jQuery) {
-              win.jQuery(sel).trigger('change');
-            }
+          const select = win.document.querySelector(sel);
+          if (!select) throw new Error('Element not found');
+          const options = Array.from(select.options) as any[];
+          const opt = options.find((o: any) => o.textContent?.trim() === lbl);
+          if (opt) {
+            select.value = opt.value;
+            return opt.value as string;
           }
-        }, selector);
-
-        // Wait for DOM to settle after selection (handles dependent dropdowns, AJAX updates)
-        await waitForDomStable(page);
+          return undefined;
+        }, selector, label) as string | undefined;
       }
+
+      // Dispatch change and input events, trigger jQuery if available
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      await page.evaluate((sel: string) => {
+        const win = globalThis as any;
+        const el = win.document.querySelector(sel);
+        if (el) {
+          el.dispatchEvent(new (win.Event)('change', { bubbles: true }));
+          el.dispatchEvent(new (win.Event)('input', { bubbles: true }));
+          if (win.jQuery) {
+            win.jQuery(sel).trigger('change');
+          }
+        }
+      }, selector);
+
+      // Wait for DOM to settle after selection (handles dependent dropdowns, AJAX updates)
+      await waitForDomStable(page);
 
       return {
         content: [{ type: 'text', text: JSON.stringify({ success: true, selectedValue }) }]

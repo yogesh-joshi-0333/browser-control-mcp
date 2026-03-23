@@ -3,7 +3,6 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
-import { sendToExtension } from '../websocket.js';
 import { getSession } from '../puppeteer-manager.js';
 import { waitForDomStable } from '../dom-utils.js';
 
@@ -15,14 +14,14 @@ export const hoverTool: ITool = {
     inputSchema: z.object({
       selector: z.string().describe('CSS selector of the element to hover over.'),
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
-      mode: z.enum(['extension', 'headless']).optional().describe('Force a specific mode. Defaults to extension.')
+      mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode. Defaults to extension.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
     const { selector, sessionId, mode } = args as {
       selector?: string;
       sessionId?: string;
-      mode?: 'extension' | 'headless';
+      mode?: 'headless' | 'connect';
     };
 
     if (!selector) {
@@ -39,29 +38,25 @@ export const hoverTool: ITool = {
       const modeResult = await selectMode({ sessionId, forceMode: mode });
       logger.info('browser_hover', { mode: modeResult.mode, sessionId: modeResult.sessionId, selector });
 
-      if (modeResult.mode === 'extension') {
-        await sendToExtension({ action: 'hover_element', payload: { selector } });
-      } else {
-        const session = getSession(modeResult.sessionId!);
-        // Wait for element to be present and visible before hovering
-        await session.page.waitForSelector(selector, { visible: true, timeout: 5000 });
+      const session = getSession(modeResult.sessionId!);
+      // Wait for element to be present and visible before hovering
+      await session.page.waitForSelector(selector, { visible: true, timeout: 5000 });
 
-        const elementHandle = await session.page.$(selector);
-        if (!elementHandle) throw new Error(`Element not found: ${selector}`);
-        const box = await elementHandle.boundingBox();
-        if (!box) throw new Error(`Element has no visible bounding box: ${selector}`);
+      const elementHandle = await session.page.$(selector);
+      if (!elementHandle) throw new Error(`Element not found: ${selector}`);
+      const box = await elementHandle.boundingBox();
+      if (!box) throw new Error(`Element has no visible bounding box: ${selector}`);
 
-        // Move mouse to element center (triggers mouseover/mouseenter/mousemove)
-        const centerX = box.x + box.width / 2;
-        const centerY = box.y + box.height / 2;
-        await session.page.mouse.move(centerX, centerY);
+      // Move mouse to element center (triggers mouseover/mouseenter/mousemove)
+      const centerX = box.x + box.width / 2;
+      const centerY = box.y + box.height / 2;
+      await session.page.mouse.move(centerX, centerY);
 
-        // Small delay to let hover effects trigger
-        await new Promise(r => setTimeout(r, 100));
+      // Small delay to let hover effects trigger
+      await new Promise(r => setTimeout(r, 100));
 
-        // Wait for DOM to settle (handles hover-triggered content, animations, re-renders)
-        await waitForDomStable(session.page);
-      }
+      // Wait for DOM to settle (handles hover-triggered content, animations, re-renders)
+      await waitForDomStable(session.page);
 
       return {
         content: [{ type: 'text', text: JSON.stringify({ success: true }) }]

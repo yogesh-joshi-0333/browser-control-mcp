@@ -3,7 +3,6 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
-import { sendToExtension } from '../websocket.js';
 import { getSession } from '../puppeteer-manager.js';
 
 export const waitForTool: ITool = {
@@ -17,8 +16,8 @@ export const waitForTool: ITool = {
       textGone: z.string().optional().describe('Wait for this text to disappear from the page'),
       timeout: z.number().optional().default(10000).describe('Maximum wait time in milliseconds'),
       visible: z.boolean().optional().default(true).describe('If true, wait for element to be visible (not just in DOM)'),
-      sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
-      mode: z.enum(['extension', 'headless']).optional().describe('Force a specific mode. Defaults to extension.')
+      sessionId: z.string().optional().describe('Puppeteer session ID. Skips mode selection.'),
+      mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
@@ -37,7 +36,7 @@ export const waitForTool: ITool = {
       timeout?: number;
       visible?: boolean;
       sessionId?: string;
-      mode?: 'extension' | 'headless';
+      mode?: 'headless' | 'connect';
     };
 
     if (!selector && !text && !textGone) {
@@ -56,33 +55,28 @@ export const waitForTool: ITool = {
 
       let waited: 'selector' | 'text' | 'textGone';
 
-      if (modeResult.mode === 'extension') {
-        await sendToExtension({ action: 'wait_for', payload: { selector, text, textGone, timeout, visible } });
-        waited = selector ? 'selector' : text ? 'text' : 'textGone';
-      } else {
-        const session = getSession(modeResult.sessionId!);
-        const page = session.page;
+      const session = getSession(modeResult.sessionId!);
+      const page = session.page;
 
-        if (selector) {
-          await page.waitForSelector(selector, { visible, timeout });
-          waited = 'selector';
-        } else if (text) {
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-          await page.waitForFunction(
-            (t: string) => (globalThis as any).document.body.innerText.includes(t),
-            { timeout },
-            text
-          );
-          waited = 'text';
-        } else {
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-          await page.waitForFunction(
-            (t: string) => !(globalThis as any).document.body.innerText.includes(t),
-            { timeout },
-            textGone!
-          );
-          waited = 'textGone';
-        }
+      if (selector) {
+        await page.waitForSelector(selector, { visible, timeout });
+        waited = 'selector';
+      } else if (text) {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        await page.waitForFunction(
+          (t: string) => (globalThis as any).document.body.innerText.includes(t),
+          { timeout },
+          text
+        );
+        waited = 'text';
+      } else {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        await page.waitForFunction(
+          (t: string) => !(globalThis as any).document.body.innerText.includes(t),
+          { timeout },
+          textGone!
+        );
+        waited = 'textGone';
       }
 
       return {

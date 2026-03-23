@@ -3,7 +3,6 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
-import { sendToExtension } from '../websocket.js';
 import { getSession } from '../puppeteer-manager.js';
 
 export const fileUploadTool: ITool = {
@@ -14,8 +13,8 @@ export const fileUploadTool: ITool = {
     inputSchema: z.object({
       selector: z.string().describe('CSS selector of the <input type="file"> element.'),
       paths: z.array(z.string()).min(1).describe('Array of absolute file paths to upload.'),
-      sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
-      mode: z.enum(['extension', 'headless']).optional().describe('Force a specific mode. Defaults to extension.')
+      sessionId: z.string().optional().describe('Puppeteer session ID. Skips mode selection.'),
+      mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
@@ -23,7 +22,7 @@ export const fileUploadTool: ITool = {
       selector?: string;
       paths?: string[];
       sessionId?: string;
-      mode?: 'extension' | 'headless';
+      mode?: 'headless' | 'connect';
     };
 
     if (!selector) {
@@ -50,35 +49,31 @@ export const fileUploadTool: ITool = {
       const modeResult = await selectMode({ sessionId, forceMode: mode });
       logger.info('browser_file_upload', { mode: modeResult.mode, sessionId: modeResult.sessionId, selector, paths });
 
-      if (modeResult.mode === 'extension') {
-        await sendToExtension({ action: 'file_upload', payload: { selector, paths } });
-      } else {
-        const session = getSession(modeResult.sessionId!);
-        await session.page.waitForSelector(selector, { timeout: 5000 });
+      const session = getSession(modeResult.sessionId!);
+      await session.page.waitForSelector(selector, { timeout: 5000 });
 
-        const fileInput = await session.page.$(selector);
-        if (!fileInput) {
-          return {
-            isError: true,
-            content: [{
-              type: 'text',
-              text: JSON.stringify({ code: 'ELEMENT_NOT_FOUND', message: `Element not found: ${selector}` })
-            }]
-          };
-        }
-
-        await fileInput.uploadFile(...paths);
-
-        // Dispatch change event so JS frameworks detect the file selection
-        await session.page.evaluate((sel: string) => {
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-          const win = globalThis as any;
-          const el = win.document.querySelector(sel);
-          if (el) {
-            el.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        }, selector);
+      const fileInput = await session.page.$(selector);
+      if (!fileInput) {
+        return {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: JSON.stringify({ code: 'ELEMENT_NOT_FOUND', message: `Element not found: ${selector}` })
+          }]
+        };
       }
+
+      await fileInput.uploadFile(...paths);
+
+      // Dispatch change event so JS frameworks detect the file selection
+      await session.page.evaluate((sel: string) => {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        const win = globalThis as any;
+        const el = win.document.querySelector(sel);
+        if (el) {
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }, selector);
 
       return {
         content: [{ type: 'text', text: JSON.stringify({ success: true, filesUploaded: paths.length }) }]

@@ -1,4 +1,3 @@
 {
-  "wsPort": 9999,
-  "extensionOrigin": ""
+  "debugPort": 9222
 }

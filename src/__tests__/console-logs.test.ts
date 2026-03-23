@@ -4,45 +4,20 @@ jest.unstable_mockModule('../mode-selector.js', () => ({
   selectMode: jest.fn()
 }));
 
-jest.unstable_mockModule('../websocket.js', () => ({
-  sendToExtension: jest.fn(),
-  getConnectionState: jest.fn().mockReturnValue({ connected: false, socketId: null })
-}));
-
 jest.unstable_mockModule('../puppeteer-manager.js', () => ({
-  getSession: jest.fn(),
-  getSessionLogs: jest.fn(),
-  listSessions: jest.fn().mockReturnValue([]),
-  createSession: jest.fn(),
-  destroySession: jest.fn(),
-  destroyAll: jest.fn()
+  getSessionLogs: jest.fn()
 }));
 
 const { consoleLogsTool } = await import('../tools/console-logs.js');
 const { selectMode } = await import('../mode-selector.js');
-const { sendToExtension } = await import('../websocket.js');
 const { getSessionLogs } = await import('../puppeteer-manager.js');
 
 const mockSelectMode = selectMode as jest.MockedFunction<typeof selectMode>;
-const mockSendToExtension = sendToExtension as jest.MockedFunction<typeof sendToExtension>;
 const mockGetSessionLogs = getSessionLogs as jest.MockedFunction<typeof getSessionLogs>;
 
 describe('browser_console_logs', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('returns console logs from extension mode', async () => {
-    const fakeLogs = [{ type: 'log', text: 'hello', timestamp: '2026-03-18T00:00:00.000Z' }];
-    mockSelectMode.mockResolvedValue({ mode: 'extension' });
-    mockSendToExtension.mockResolvedValue({ logs: fakeLogs });
-
-    const result = await consoleLogsTool.handler({});
-
-    expect(result.isError).toBeFalsy();
-    expect(mockSendToExtension).toHaveBeenCalledWith({ action: 'get_console_logs', payload: {} });
-    const parsed = JSON.parse((result.content[0] as { text: string }).text);
-    expect(parsed.logs).toEqual(fakeLogs);
   });
 
   it('returns console logs from headless mode', async () => {
@@ -72,7 +47,7 @@ describe('browser_console_logs', () => {
     expect(parsed.logs).toEqual([]);
   });
 
-  it('returns error when extension not connected', async () => {
+  it('returns error when mode selection fails', async () => {
     mockSelectMode.mockRejectedValue({ code: 'EXTENSION_NOT_CONNECTED', message: 'Not connected' });
 
     const result = await consoleLogsTool.handler({});
