@@ -15,7 +15,7 @@ Works with **any MCP-compatible client**: Claude, Cursor, Windsurf, Cline, and m
 - **Console logs** — read JS errors, warnings, and debug output
 - **Custom viewports** — test at desktop (1920x1080), tablet (768x1024), or mobile (375x812)
 - **Session persistence** — cookies, login state, history maintained across calls
-- **Two modes**: headless Puppeteer (background) or real Chrome browser (via extension)
+- **Two modes**: headless Puppeteer (background) or real Chrome browser (via CDP connect)
 - **Anti-bot bypass** — spoofed user agent, no webdriver flag
 
 ## Quick Start
@@ -89,16 +89,32 @@ Opens an invisible background browser using Puppeteer. No setup required.
 - Anti-bot detection bypass included
 - Sessions identified by `sessionId` — pass to all subsequent calls
 
-### Extension Mode (Optional)
+### Connect Mode (Optional)
 
-Controls your real Chrome browser. Requires the Chrome Extension.
+Controls your real running Chrome browser via the Chrome DevTools Protocol (CDP). No extension required.
 
 **Setup:**
 
-1. Open Chrome → `chrome://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked" → select the `chrome-extension/` folder from this package
-4. The extension connects automatically via WebSocket on `localhost:9999`
+Launch Chrome with the remote debugging port enabled:
+
+```bash
+# macOS
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+
+# Linux
+google-chrome --remote-debugging-port=9222
+
+# Windows
+chrome.exe --remote-debugging-port=9222
+```
+
+Then set connect mode in your AI agent:
+
+```
+browser_select_mode({ mode: "connect" })
+```
+
+The server connects to your running Chrome instance and controls it directly — no extension install needed.
 
 ## Examples
 
@@ -215,4 +231,4 @@ npm test
 
 ## License
 
-[MIT](LICENSE) — Yogesh Joshi
+[MIT](LICENSE) — [Yogesh Joshi](https://devyogesh.com)

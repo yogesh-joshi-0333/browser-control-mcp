@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "browser-control": {
-      "command": "node",
-      "args": ["/media/pc/External/Project/mcp/dist/index.js"]
+      "command": "npx",
+      "args": ["browser-control-mcp-server"]
     }
   }
 }

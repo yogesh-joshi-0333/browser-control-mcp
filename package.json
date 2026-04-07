@@ -30,7 +30,8 @@
     "automation",
     "puppeteer",
     "chrome",
-    "chrome-extension",
+    "cdp",
+    "chrome-devtools-protocol",
     "screenshot",
     "headless",
     "browser-control",
@@ -41,7 +42,11 @@
     "dom-inspection",
     "testing"
   ],
-  "author": "Yogesh Joshi <joshiyogesh0333@gmail.com> (https://devyogesh.com)",
+  "author": {
+    "name": "Yogesh Joshi",
+    "email": "joshiyogesh0333@gmail.com",
+    "url": "https://devyogesh.com"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
