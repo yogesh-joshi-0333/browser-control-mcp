@@ -66,8 +66,20 @@ function getClients() {
 
   clients.push(makeStandardClient('Claude Desktop', claudeConfigPath));
 
-  // ── Claude Code (.mcp.json in cwd) ──────────────────────────────────────────
-  clients.push(makeStandardClient('Claude Code', resolvePath(cwd(), '.mcp.json')));
+  // ── Claude Code (global ~/.claude/settings.json) ────────────────────────────
+  // Claude Code reads global MCP servers from ~/.claude/settings.json
+  clients.push({
+    name: 'Claude Code',
+    configPath: resolvePath(HOME, '.claude', 'settings.json'),
+    read: (raw) => JSON.parse(raw),
+    hasEntry: (obj) => !!(obj?.mcpServers?.[MCP_KEY]),
+    inject: (obj) => {
+      if (!obj.mcpServers) obj.mcpServers = {};
+      obj.mcpServers[MCP_KEY] = MCP_ENTRY;
+      return obj;
+    },
+    write: (obj) => JSON.stringify(obj, null, 2),
+  });
 
   // ── Cursor ───────────────────────────────────────────────────────────────────
   const cursorConfigPath = {
