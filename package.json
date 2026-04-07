@@ -1,6 +1,6 @@
 {
   "name": "browser-control-mcp-server",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "MCP server that gives AI agents full browser control — navigate, click, type, scroll, screenshot, inspect DOM, and read console logs in both headless Puppeteer and real Chrome browser.",
   "type": "module",
   "main": "dist/index.js",
@@ -18,8 +18,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest && node scripts/setup.test.js",
     "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
+    "test:setup": "node scripts/setup.test.js",
     "lint": "eslint src --ext .ts",
     "postinstall": "node scripts/postinstall.js",
     "prepublishOnly": "npm run build"
