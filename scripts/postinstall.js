@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
 /**
- * Post-install script: checks if Chrome/Chromium is available for puppeteer-core.
- * Shows install guidance if not found — does NOT auto-install anything.
+ * Post-install script:
+ * 1. Checks if Chrome/Chromium is available for puppeteer-core.
+ * 2. Auto-configures browser-control MCP entry in all detected AI clients.
  */
 
 import { existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { platform } from 'node:os';
+import { setupClients } from './setup.js';
 
 const CANDIDATES = {
   linux: [
@@ -88,3 +90,11 @@ function main() {
 }
 
 main();
+
+// Auto-configure all detected AI clients
+try {
+  setupClients();
+} catch (err) {
+  // Never fail npm install due to setup errors
+  console.warn('[browser-control-mcp] Client setup encountered an error:', err.message);
+}

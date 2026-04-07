@@ -26,15 +26,30 @@ Works with **any MCP-compatible client**: Claude, Cursor, Windsurf, Cline, and m
 npm install -g browser-control-mcp-server
 ```
 
-Or run directly with npx:
+That's it. The installer **automatically configures** `browser-control` in all detected AI clients on your system — no manual setup needed.
 
-```bash
-npx browser-control-mcp-server
+**Supported clients (auto-configured on install):**
+Claude Desktop · Claude Code · Cursor · Windsurf · VS Code (Copilot/Cline) · Zed · Continue · OpenCode · Cody
+
+Works on **macOS, Windows, and Linux**.
+
+After install you'll see something like:
+
+```
+[browser-control-mcp] Configuring AI clients...
+  ✓ Claude Desktop configured
+  ✓ Cursor configured
+  — Windsurf not found (skipped)
+[browser-control-mcp] Done. Restart your AI client to activate browser-control.
 ```
 
-### 2. Configure Your MCP Client
+Just **restart your AI client** and the browser tools are ready.
 
-Add to your MCP client configuration:
+---
+
+### Manual Configuration (if needed)
+
+If auto-setup didn't catch your client, add this to your MCP config manually:
 
 ```json
 {
@@ -47,11 +62,7 @@ Add to your MCP client configuration:
 }
 ```
 
-**Claude Desktop** — add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
-
-**Cursor / Windsurf / Cline** — add to your MCP settings file
-
-### 3. Use It
+### 2. Use It
 
 Tell your AI agent:
 
