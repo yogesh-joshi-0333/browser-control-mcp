@@ -1,4 +1,5 @@
 import { createSession, createConnectSession } from './puppeteer-manager.js';
+import { resolveProfilePath, isValidProfileName } from './profiles.js';
 import { logger } from './logger.js';
 
 export type BrowserMode = 'headless' | 'connect';
@@ -12,6 +13,7 @@ interface ISelectModeOptions {
   sessionId?: string;
   forceMode?: BrowserMode;
   proxyServer?: string;
+  profile?: string;
 }
 
 // Module-level default mode — set by browser_select_mode, read by all tools
@@ -30,7 +32,12 @@ export function clearDefaultMode(): void {
 }
 
 export async function selectMode(options: ISelectModeOptions = {}): Promise<IModeResult> {
-  const { sessionId, forceMode, proxyServer } = options;
+  const { sessionId, forceMode, proxyServer, profile } = options;
+
+  if (profile && !isValidProfileName(profile)) {
+    throw { code: 'INVALID_PROFILE_NAME', message: `Invalid profile name: "${profile}" (letters, digits, dash, underscore only)` };
+  }
+  const userDataDir = profile ? resolveProfilePath(profile) : undefined;
 
   // Session already exists — return as headless (it's a Puppeteer session either way)
   if (sessionId) {
@@ -46,6 +53,6 @@ export async function selectMode(options: ISelectModeOptions = {}): Promise<IMod
   }
 
   // Default: headless
-  const newSessionId = await createSession({ proxyServer });
+  const newSessionId = await createSession({ proxyServer, userDataDir });
   return { mode: 'headless', sessionId: newSessionId };
 }

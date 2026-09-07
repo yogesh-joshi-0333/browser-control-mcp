@@ -10,18 +10,19 @@ export const navigateTool: ITool = {
   name: 'browser_navigate',
   options: {
     title: 'Navigate Browser',
-    description: 'Navigate the browser to any URL — websites, localhost, web apps. Opens the page and waits for it to fully load. In headless mode, you can set custom viewport dimensions (width/height in pixels) to simulate desktop (1920x1080), tablet (768x1024), or mobile (375x812) screen sizes. Returns the final URL and sessionId. Pass the returned sessionId to all subsequent tool calls to reuse this browser session. Pass proxyServer (only when NOT reusing an existing sessionId) to route this session\'s traffic through a proxy — it applies at browser launch and cannot be changed on an existing session.',
+    description: 'Navigate the browser to any URL — websites, localhost, web apps. Opens the page and waits for it to fully load. In headless mode, you can set custom viewport dimensions (width/height in pixels) to simulate desktop (1920x1080), tablet (768x1024), or mobile (375x812) screen sizes. Returns the final URL and sessionId. Pass the returned sessionId to all subsequent tool calls to reuse this browser session. Pass proxyServer or profile (only when NOT reusing an existing sessionId) — both apply at browser launch and cannot be changed on an existing session.',
     inputSchema: z.object({
       url: z.string().describe('The URL to navigate to.'),
       width: z.number().optional().describe('Viewport width in pixels (headless only). Default 1024.'),
       height: z.number().optional().describe('Viewport height in pixels (headless only). Default 768.'),
       proxyServer: z.string().optional().describe('Proxy server for a NEW headless session, e.g. "127.0.0.1:8080" or "http://user:pass@host:port". Ignored if sessionId is already set — proxy can only be set when the browser launches.'),
+      profile: z.string().optional().describe('Named persistent profile for a NEW headless session (letters, digits, dash, underscore only) — cookies/localStorage survive across separate MCP server runs, unlike normal sessions which are wiped when the session ends. Manage profiles with browser_profiles. Ignored if sessionId is already set.'),
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
       mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode. Defaults to extension.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
-    const { url, sessionId, mode, width, height, proxyServer } = args as { url?: string; sessionId?: string; mode?: 'headless' | 'connect'; width?: number; height?: number; proxyServer?: string };
+    const { url, sessionId, mode, width, height, proxyServer, profile } = args as { url?: string; sessionId?: string; mode?: 'headless' | 'connect'; width?: number; height?: number; proxyServer?: string; profile?: string };
 
     if (!url) {
       return {
@@ -31,7 +32,7 @@ export const navigateTool: ITool = {
     }
 
     try {
-      const modeResult = await selectMode({ sessionId, forceMode: mode, proxyServer });
+      const modeResult = await selectMode({ sessionId, forceMode: mode, proxyServer, profile });
       logger.info('browser_navigate', { mode: modeResult.mode, sessionId: modeResult.sessionId, url });
 
       const session = getSession(modeResult.sessionId!);

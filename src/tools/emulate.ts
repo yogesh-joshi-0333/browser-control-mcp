@@ -24,7 +24,7 @@ export const emulateTool: ITool = {
       timezone: z.string().optional().describe('IANA timezone id, e.g. "America/New_York", "Asia/Kolkata"'),
       locale: z.string().optional().describe('Locale/language, e.g. "fr-FR" — sent as the Accept-Language header (approximation; does not change navigator.language)'),
       geolocation: z.object({ latitude: z.number(), longitude: z.number() }).optional().describe('Coordinates to report for navigator.geolocation. Automatically grants the geolocation permission for the current origin.'),
-      permissions: z.array(z.string()).optional().describe('Permissions to grant for the current origin, e.g. ["clipboard-read", "clipboard-write", "notifications"]'),
+      permissions: z.array(z.string()).optional().describe('Permissions to grant for the current origin, e.g. ["notifications", "midi"]. For clipboard-read/clipboard-write specifically, use browser_clipboard instead — this generic path does not reliably grant clipboard permissions in headless Chrome.'),
       networkThrottle: z.enum([...NETWORK_PRESETS, 'offline', 'none']).optional().describe('Named network condition preset, "offline" to disable the network, or "none" to clear throttling'),
       cpuThrottle: z.number().optional().describe('CPU slowdown factor (e.g. 4 = 4x slower). Pass 1 to clear.'),
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),

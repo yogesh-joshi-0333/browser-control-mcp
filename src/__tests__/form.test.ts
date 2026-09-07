@@ -33,7 +33,7 @@ describe('browser_form_fill', () => {
 
   it('types into a plain text input', async () => {
     const page = makeMockPage('INPUT');
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await formFillTool.handler({ sessionId: 'session-abc12345', fields: { '#email': 'user@example.com' } });
 
@@ -45,7 +45,7 @@ describe('browser_form_fill', () => {
 
   it('uses select() for a <select> element', async () => {
     const page = makeMockPage('SELECT');
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await formFillTool.handler({ sessionId: 'session-abc12345', fields: { '#country': 'IN' } });
 
@@ -63,7 +63,7 @@ describe('browser_form_fill', () => {
 
   it('clicks submitSelector after filling all fields, when provided', async () => {
     const page = makeMockPage('INPUT');
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await formFillTool.handler({ sessionId: 'session-abc12345', fields: { '#email': 'a@b.com' }, submitSelector: '#submit-btn' });
 

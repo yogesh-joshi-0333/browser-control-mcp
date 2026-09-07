@@ -41,7 +41,7 @@ describe('browser_emulate', () => {
 
   it('applies a known device preset', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await emulateTool.handler({ sessionId: 'session-abc12345', device: 'iPhone 15 Pro' });
 
@@ -53,7 +53,7 @@ describe('browser_emulate', () => {
 
   it('errors on an unknown device name', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await emulateTool.handler({ sessionId: 'session-abc12345', device: 'Not A Real Device' });
 
@@ -64,7 +64,7 @@ describe('browser_emulate', () => {
 
   it('applies color scheme and reduced motion together', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await emulateTool.handler({ sessionId: 'session-abc12345', colorScheme: 'dark', reducedMotion: 'reduce' });
 
@@ -76,7 +76,7 @@ describe('browser_emulate', () => {
 
   it('applies timezone', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await emulateTool.handler({ sessionId: 'session-abc12345', timezone: 'America/New_York' });
 
@@ -85,7 +85,7 @@ describe('browser_emulate', () => {
 
   it('applies locale via Accept-Language header', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await emulateTool.handler({ sessionId: 'session-abc12345', locale: 'fr-FR' });
 
@@ -94,7 +94,7 @@ describe('browser_emulate', () => {
 
   it('grants geolocation permission then sets coordinates', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await emulateTool.handler({ sessionId: 'session-abc12345', geolocation: { latitude: 51.5, longitude: -0.12 } });
 
@@ -104,7 +104,7 @@ describe('browser_emulate', () => {
 
   it('overrides arbitrary permissions', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await emulateTool.handler({ sessionId: 'session-abc12345', permissions: ['clipboard-read', 'clipboard-write'] });
 
@@ -113,7 +113,7 @@ describe('browser_emulate', () => {
 
   it('applies a named network throttle preset', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await emulateTool.handler({ sessionId: 'session-abc12345', networkThrottle: 'Slow 3G' });
 
@@ -122,7 +122,7 @@ describe('browser_emulate', () => {
 
   it('enables offline mode', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await emulateTool.handler({ sessionId: 'session-abc12345', networkThrottle: 'offline' });
 
@@ -131,7 +131,7 @@ describe('browser_emulate', () => {
 
   it('clears throttling when networkThrottle is "none"', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await emulateTool.handler({ sessionId: 'session-abc12345', networkThrottle: 'none' });
 
@@ -141,7 +141,7 @@ describe('browser_emulate', () => {
 
   it('applies CPU throttling factor', async () => {
     const page = makeMockPage();
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await emulateTool.handler({ sessionId: 'session-abc12345', cpuThrottle: 4 });
 

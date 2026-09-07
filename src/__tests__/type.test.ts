@@ -26,7 +26,7 @@ describe('browser_type', () => {
       waitForSelector: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await typeTool.handler({ selector: '#input', text: 'hello', sessionId: 'session-abc12345' });
 
@@ -71,7 +71,7 @@ describe('browser_type', () => {
       frames: jest.fn().mockReturnValue([{ type: frameType, waitForSelector: frameWaitForSelector }])
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await typeTool.handler({ selector: '#input', text: 'hello', frameIndex: 0, sessionId: 'session-abc12345' });
 
@@ -83,7 +83,7 @@ describe('browser_type', () => {
   it('errors with FRAME_NOT_FOUND for an out-of-range frameIndex', async () => {
     const mockPage = { type: jest.fn(), waitForSelector: jest.fn(), frames: jest.fn().mockReturnValue([]) };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await typeTool.handler({ selector: '#input', text: 'hello', frameIndex: 3, sessionId: 'session-abc12345' });
 

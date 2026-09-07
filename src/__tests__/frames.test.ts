@@ -25,7 +25,7 @@ describe('browser_frames', () => {
     const frame0 = { url: () => 'https://example.com', name: () => '' };
     const frame1 = { url: () => 'https://example.com/widget', name: () => 'widget-frame' };
     const page = { frames: jest.fn().mockReturnValue([frame0, frame1]) };
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await framesTool.handler({ sessionId: 'session-abc12345' });
 

@@ -17,7 +17,7 @@ const mockGetSession = getSession as jest.MockedFunction<typeof getSession>;
 
 function mockSession(page: Record<string, unknown>) {
   mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-  mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+  mockGetSession.mockReturnValue({ id: 'session-abc12345', page: page as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 }
 
 describe('browser_cookies', () => {

@@ -81,4 +81,15 @@ describe('mode-selector', () => {
     await selectMode({ sessionId: 'session-existing', proxyServer: '127.0.0.1:8888' });
     expect(mockCreateSession).not.toHaveBeenCalled();
   });
+
+  it('resolves profile name to a userDataDir path and forwards it to createSession', async () => {
+    mockCreateSession.mockResolvedValue('session-profile1');
+    await selectMode({ forceMode: 'headless', profile: 'work' });
+    expect(mockCreateSession).toHaveBeenCalledWith(expect.objectContaining({ userDataDir: expect.stringContaining('work') }));
+  });
+
+  it('rejects a profile name containing path separators', async () => {
+    await expect(selectMode({ forceMode: 'headless', profile: '../etc' })).rejects.toMatchObject({ code: 'INVALID_PROFILE_NAME' });
+    expect(mockCreateSession).not.toHaveBeenCalled();
+  });
 });

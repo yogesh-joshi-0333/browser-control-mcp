@@ -25,7 +25,7 @@ describe('browser_get_dom', () => {
       content: jest.fn<() => Promise<string>>().mockResolvedValue('<html><body>test</body></html>')
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await getDomTool.handler({ sessionId: 'session-abc12345' });
 
@@ -59,7 +59,7 @@ describe('browser_get_dom', () => {
       evaluate: jest.fn<(...args: unknown[]) => Promise<string | null>>().mockResolvedValue('<div id="a">scoped</div>')
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await getDomTool.handler({ sessionId: 'session-abc12345', selector: '#a' });
 
@@ -75,7 +75,7 @@ describe('browser_get_dom', () => {
       evaluate: jest.fn<(...args: unknown[]) => Promise<string | null>>().mockResolvedValue(null)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await getDomTool.handler({ sessionId: 'session-abc12345', selector: '#missing' });
 
@@ -89,7 +89,7 @@ describe('browser_get_dom', () => {
       content: jest.fn<() => Promise<string>>().mockResolvedValue('<html><body><p>Hello <b>world</b></p></body></html>')
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await getDomTool.handler({ sessionId: 'session-abc12345', format: 'text' });
 
@@ -104,7 +104,7 @@ describe('browser_get_dom', () => {
       content: jest.fn<() => Promise<string>>().mockResolvedValue(longHtml)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await getDomTool.handler({ sessionId: 'session-abc12345', maxLength: 20 });
 
@@ -122,7 +122,7 @@ describe('browser_get_dom', () => {
       frames: jest.fn().mockReturnValue([{ content: frameContent }])
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await getDomTool.handler({ sessionId: 'session-abc12345', frameIndex: 0 });
 
@@ -135,7 +135,7 @@ describe('browser_get_dom', () => {
   it('errors with FRAME_NOT_FOUND for an out-of-range frameIndex', async () => {
     const mockPage = { content: jest.fn(), frames: jest.fn().mockReturnValue([]) };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await getDomTool.handler({ sessionId: 'session-abc12345', frameIndex: 2 });
 
@@ -150,7 +150,7 @@ describe('browser_get_dom', () => {
       content: jest.fn<() => Promise<string>>().mockResolvedValue(longHtml)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await getDomTool.handler({ sessionId: 'session-abc12345' });
 

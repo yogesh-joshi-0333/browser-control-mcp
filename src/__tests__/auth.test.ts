@@ -23,7 +23,7 @@ describe('browser_auth', () => {
 
   it('sets HTTP Basic Auth credentials for the current page', async () => {
     const authenticate = jest.fn<(...args: unknown[]) => Promise<void>>().mockResolvedValue(undefined);
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: { authenticate } as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: { authenticate } as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await authTool.handler({ sessionId: 'session-abc12345', username: 'admin', password: 'secret' });
 
@@ -33,7 +33,7 @@ describe('browser_auth', () => {
 
   it('clears credentials when clear:true is passed', async () => {
     const authenticate = jest.fn<(...args: unknown[]) => Promise<void>>().mockResolvedValue(undefined);
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: { authenticate } as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: { authenticate } as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await authTool.handler({ sessionId: 'session-abc12345', clear: true });
 

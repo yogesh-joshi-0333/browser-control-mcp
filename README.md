@@ -111,6 +111,13 @@ The agent will use the browser tools automatically.
 | `browser_emulate` | Device presets, dark mode, timezone, geolocation, permissions, network/CPU throttling |
 | `browser_frames` | List iframes; target one with `frameIndex` on click/type/get_dom |
 | `browser_form_fill` | Fill multiple form fields (inputs, selects, checkboxes) in one call |
+| `browser_reload` | Reload the page, with an optional cache-bypassing hard refresh |
+| `browser_navigate_forward` | Go forward (counterpart to `browser_navigate_back`) |
+| `browser_page_errors` | Read uncaught JS exceptions, distinct from console logs |
+| `browser_clipboard` | Read/write the system clipboard (auto-grants permission) |
+| `browser_get_element` | Full detail on one element: attributes, bounding box, styles |
+| `browser_find` | Search for elements by text/role, no CSS selector needed |
+| `browser_profiles` | List/delete named persistent Chrome profiles |
 
 ## Browser Modes
 

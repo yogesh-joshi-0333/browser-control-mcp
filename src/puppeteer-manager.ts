@@ -25,6 +25,15 @@ interface ISession {
   networkLog: INetworkEntry[];
   blockedResourceTypes: Set<string>;
   downloadPath?: string;
+  pageErrors: Array<{ message: string; stack?: string; timestamp: string }>;
+}
+
+/** Attaches a pageerror listener that records uncaught exceptions thrown in the page. */
+function attachPageErrorCapture(session: ISession): void {
+  session.page.on('pageerror', (err: unknown) => {
+    const error = err instanceof Error ? err : new Error(String(err));
+    session.pageErrors.push({ message: error.message, stack: error.stack, timestamp: new Date().toISOString() });
+  });
 }
 
 const sessions = new Map<string, ISession>();
@@ -119,6 +128,7 @@ function findChromePath(): string {
 
 export interface ICreateSessionOptions {
   proxyServer?: string;
+  userDataDir?: string;
 }
 
 export async function createSession(options: ICreateSessionOptions = {}): Promise<string> {
@@ -137,6 +147,7 @@ export async function createSession(options: ICreateSessionOptions = {}): Promis
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
+    userDataDir: options.userDataDir,
     args
   });
   const pages = await browser.pages();
@@ -152,9 +163,10 @@ export async function createSession(options: ICreateSessionOptions = {}): Promis
   });
   const session: ISession = {
     id, browser, page, createdAt: new Date(), logs: sessionLogs,
-    networkLog: [], blockedResourceTypes: new Set()
+    networkLog: [], blockedResourceTypes: new Set(), pageErrors: []
   };
   await attachNetworkCapture(session);
+  attachPageErrorCapture(session);
   sessions.set(id, session);
   logger.info('Puppeteer session created', { id });
   return id;
@@ -176,6 +188,10 @@ export function getSessionLogs(id: string): Array<{ type: string; text: string; 
     throw new Error(error.code);
   }
   return session.logs;
+}
+
+export function getSessionPageErrors(id: string): Array<{ message: string; stack?: string; timestamp: string }> {
+  return getSession(id).pageErrors;
 }
 
 export function getNetworkLog(id: string): INetworkEntry[] {
@@ -217,6 +233,16 @@ export async function destroySession(id: string): Promise<void> {
   if (!session) return;
   try {
     await session.browser.close();
+    // browser.close() resolves once the CDP connection closes, which can race
+    // ahead of the Chrome process actually exiting and flushing profile writes
+    // (userDataDir) to disk under load. Wait for real process exit too.
+    const proc = session.browser.process();
+    if (proc && proc.exitCode === null && !proc.killed) {
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, 3000);
+        proc.once('exit', () => { clearTimeout(timer); resolve(); });
+      });
+    }
   } catch (error) {
     logger.error('Error closing Puppeteer session', { id, error: String(error) });
   }
@@ -312,7 +338,9 @@ export async function createConnectSession(port: number = DEBUG_PORT): Promise<s
   // NOTE: network capture/blocking is intentionally NOT enabled in connect mode —
   // this is the user's real, already-in-use Chrome tab, and request interception
   // adds latency/risk to every request on their live browsing session.
-  sessions.set(id, { id, browser, page, createdAt: new Date(), logs: sessionLogs, networkLog: [], blockedResourceTypes: new Set() });
+  const connectSession: ISession = { id, browser, page, createdAt: new Date(), logs: sessionLogs, networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] };
+  attachPageErrorCapture(connectSession);
+  sessions.set(id, connectSession);
   logger.info('CDP connect session created', { id });
   return id;
 }

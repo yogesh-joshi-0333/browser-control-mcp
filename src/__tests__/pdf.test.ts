@@ -24,7 +24,7 @@ describe('browser_pdf', () => {
     const fakeBuffer = Buffer.from('fake-pdf-bytes');
     const pdf = jest.fn<(...args: unknown[]) => Promise<Buffer>>().mockResolvedValue(fakeBuffer);
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: { pdf } as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: { pdf } as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await pdfTool.handler({ sessionId: 'session-abc12345', path: '/tmp/out.pdf' });
 
@@ -37,7 +37,7 @@ describe('browser_pdf', () => {
   it('passes through format and landscape options', async () => {
     const pdf = jest.fn<(...args: unknown[]) => Promise<Buffer>>().mockResolvedValue(Buffer.from(''));
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: { pdf } as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: { pdf } as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await pdfTool.handler({ sessionId: 'session-abc12345', path: '/tmp/out.pdf', format: 'Letter', landscape: true });
 
@@ -46,7 +46,7 @@ describe('browser_pdf', () => {
 
   it('requires a path', async () => {
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: {} as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: {} as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await pdfTool.handler({ sessionId: 'session-abc12345' });
 

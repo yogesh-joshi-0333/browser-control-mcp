@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-09-07
+
+### Added
+- `browser_reload` — reload the current page, with an `ignoreCache` hard-refresh option (via CDP, since Puppeteer's `page.reload()` has no cache-bypass option).
+- `browser_navigate_forward` — the missing counterpart to `browser_navigate_back`.
+- `browser_page_errors` — uncaught JavaScript exceptions (real crashes), distinct from `browser_console_logs` which only catches explicit `console.*` calls.
+- `browser_clipboard` — read/write the system clipboard, with automatic permission granting built in (discovered along the way: Puppeteer's `browserContext().overridePermissions()` does not reliably grant clipboard permissions in this environment — raw CDP `Browser.grantPermissions` does, and `browser_clipboard` uses that).
+- `browser_get_element` — full detail on one element by selector: attributes, bounding box, visibility, text, curated computed styles.
+- `browser_find` — search for element(s) by visible text and/or ARIA role, no CSS selector needed; matches get an `f`-prefixed ref usable by `browser_click`/`type`/`hover`/`select_option` (kept distinct from `browser_snapshot`'s `e`-prefixed refs).
+- `browser_profiles` + `browser_navigate`'s new `profile` param — named persistent Chrome profiles (`userDataDir`) whose cookies/login state survive across separate MCP server runs, unlike a normal session.
+
+### Fixed
+- `destroySession` now waits for the underlying Chrome process to actually exit, not just for the CDP connection to close, so profile writes are reliably flushed before a session is considered destroyed.
+
 ## [1.4.0] - 2026-09-07
 
 ### Added

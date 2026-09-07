@@ -28,7 +28,7 @@ describe('browser_snapshot', () => {
       })
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await snapshotTool.handler({ sessionId: 'session-abc12345' });
 
@@ -45,7 +45,7 @@ describe('browser_snapshot', () => {
       })
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await snapshotTool.handler({ sessionId: 'session-abc12345', maxNodes: 50 });
 
@@ -60,7 +60,7 @@ describe('browser_snapshot', () => {
       })
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     await snapshotTool.handler({ sessionId: 'session-abc12345' });
 
@@ -94,7 +94,7 @@ describe('browser_snapshot', () => {
       })
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-diff-1' });
-    mockGetSession.mockReturnValue({ id: 'session-diff-1', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-diff-1', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await snapshotTool.handler({ sessionId: 'session-diff-1', diff: true });
 
@@ -110,7 +110,7 @@ describe('browser_snapshot', () => {
       })
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-diff-2' });
-    mockGetSession.mockReturnValue({ id: 'session-diff-2', page: firstPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-diff-2', page: firstPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
     await snapshotTool.handler({ sessionId: 'session-diff-2', diff: true });
 
     const secondPage = {
@@ -122,7 +122,7 @@ describe('browser_snapshot', () => {
         totalInteresting: 2
       })
     };
-    mockGetSession.mockReturnValue({ id: 'session-diff-2', page: secondPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    mockGetSession.mockReturnValue({ id: 'session-diff-2', page: secondPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set(), pageErrors: [] });
 
     const result = await snapshotTool.handler({ sessionId: 'session-diff-2', diff: true });
 

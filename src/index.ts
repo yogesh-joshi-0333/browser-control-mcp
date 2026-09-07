@@ -35,6 +35,13 @@ import { authTool } from './tools/auth.js';
 import { emulateTool } from './tools/emulate.js';
 import { framesTool } from './tools/frames.js';
 import { formFillTool } from './tools/form.js';
+import { reloadTool } from './tools/reload.js';
+import { navigateForwardTool } from './tools/navigate-forward.js';
+import { pageErrorsTool } from './tools/page-errors.js';
+import { clipboardTool } from './tools/clipboard.js';
+import { getElementTool } from './tools/get-element.js';
+import { findTool } from './tools/find.js';
+import { profilesTool } from './tools/profiles.js';
 import { destroyAll } from './puppeteer-manager.js';
 import { registerTool } from './tool-registry.js';
 import type { ITool } from './types.js';
@@ -72,7 +79,14 @@ const tools: ITool[] = [
   authTool,
   emulateTool,
   framesTool,
-  formFillTool
+  formFillTool,
+  reloadTool,
+  navigateForwardTool,
+  pageErrorsTool,
+  clipboardTool,
+  getElementTool,
+  findTool,
+  profilesTool
 ];
 
 async function shutdown(): Promise<void> {
@@ -86,7 +100,7 @@ async function main(): Promise<void> {
   process.on('SIGINT', () => { void shutdown(); });
 
   const server = new McpServer(
-    { name: 'browser-control', version: '1.4.0' },
+    { name: 'browser-control', version: '1.5.0' },
     {
       capabilities: { logging: {} },
       instructions: [
@@ -219,6 +233,29 @@ async function main(): Promise<void> {
         '  WARNING: a full unscoped HTML dump can be tens of thousands of characters. Prefer',
         '  browser_snapshot for exploring a page, or pass selector/format/maxLength to scope this down.',
         '',
+        'browser_find — Search for element(s) by visible text and/or ARIA role, no CSS selector needed',
+        '  Params:',
+        '    text (optional, string) — substring, case-insensitive by default, matched against accessible name',
+        '    role (optional, string) — filter by role, e.g. "button", "link", "textbox", "heading"',
+        '    exact (optional, boolean, default false) — require an exact text match instead of substring',
+        '    multiple (optional, boolean, default false) — return all matches instead of stopping at the first',
+        '    maxResults (optional, number, default 10) — cap when multiple:true',
+        '    sessionId, mode — standard params',
+        '  At least one of text/role is required. Returns: { matches: [{ ref, role, name }] }',
+        '  Each ref is a valid CSS selector: pass \'[data-mcp-ref="f1"]\' to browser_click/type/hover/select_option.',
+        '  ("f" prefix keeps these refs distinct from browser_snapshot\'s "e" refs — the two never collide.)',
+        '  PREFER THIS over browser_snapshot when you already know roughly what you\'re looking for by name/role —',
+        '  it\'s a single targeted lookup instead of a full page dump.',
+        '',
+        'browser_get_element — Get full detail on ONE element by selector',
+        '  Params:',
+        '    selector (REQUIRED, string) — CSS selector. Prefix "pierce/" for shadow DOM.',
+        '    styles (optional, string[]) — computed CSS properties to include (default: display, visibility, color,',
+        '      background-color, font-size, font-weight). Pass your own list for anything else.',
+        '    sessionId, mode — standard params',
+        '  Returns: { tagName, attributes, boundingBox, visible, textContent, styles }',
+        '  Use when you need to closely inspect ONE element — why it looks wrong, whether it\'s actually visible/enabled.',
+        '',
         'browser_frames — List all iframes on the current page',
         '  Params: sessionId, mode — standard params',
         '  Returns: { frames: [{ index, url, name }] }',
@@ -240,6 +277,21 @@ async function main(): Promise<void> {
         '    clear (optional, boolean) — remove previously set credentials',
         '    sessionId, mode — standard params',
         '  Call BEFORE browser_navigate to a password-protected URL (a native browser auth dialog, not a page form).',
+        '',
+        'browser_clipboard — Read or write the system clipboard from the page context',
+        '  Params:',
+        '    action (REQUIRED, "read" | "write")',
+        '    text (required for "write") — text to write to the clipboard',
+        '    sessionId, mode — standard params',
+        '  Automatically grants clipboard permissions first — you do NOT need to call browser_emulate for this.',
+        '  Use to verify a "Copy" button worked, or to paste text into a page that has no visible input for it.',
+        '',
+        'browser_profiles — List or delete named persistent browser profiles',
+        '  Params:',
+        '    action (REQUIRED, "list" | "delete")',
+        '    name (required for "delete") — profile name',
+        '  A profile\'s cookies/login state survive across separate MCP server runs (unlike a normal session, which is',
+        '  wiped when it ends). Create one implicitly via browser_navigate\'s `profile` param on a brand-new session.',
         '',
         'browser_emulate — Emulate device/environment conditions on the current page',
         '  Params (pass only what you need, each applies independently):',
@@ -297,6 +349,13 @@ async function main(): Promise<void> {
         '  Returns: { logs: [{ type, text, timestamp }] } — array of console messages',
         '  Log types: "log", "warn", "error", "info", "debug"',
         '  Useful for: debugging JS errors, checking API responses, finding runtime issues',
+        '',
+        'browser_page_errors — Read uncaught JavaScript exceptions (real crashes)',
+        '  Params: sessionId, mode — standard params',
+        '  Returns: { errors: [{ message, stack, timestamp }] }',
+        '  DIFFERENT from browser_console_logs: that only catches explicit console.log/warn/error calls.',
+        '  This catches a script that threw and stopped running, even if it never logged anything.',
+        '  Check this whenever a page seems "stuck" or a feature silently does nothing.',
         '',
         'browser_keyboard — Press keyboard keys and key combinations',
         '  Params:',
@@ -364,6 +423,16 @@ async function main(): Promise<void> {
         'browser_navigate_back — Go back to previous page',
         '  Params: sessionId, mode — standard params',
         '  Equivalent to clicking the browser back button',
+        '',
+        'browser_navigate_forward — Go forward to the next page (after a back navigation)',
+        '  Params: sessionId, mode — standard params',
+        '  Equivalent to clicking the browser forward button. If there is no forward history, the page just stays put.',
+        '',
+        'browser_reload — Reload the current page',
+        '  Params:',
+        '    ignoreCache (optional, boolean, default false) — hard refresh bypassing the cache (like Ctrl+Shift+R)',
+        '    sessionId, mode — standard params',
+        '  Returns: { success: true, url }',
         '',
         'browser_cookies — Get, set, delete, or clear cookies on the current page',
         '  Params:',
