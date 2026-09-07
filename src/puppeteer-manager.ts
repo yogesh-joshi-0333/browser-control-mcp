@@ -117,19 +117,27 @@ function findChromePath(): string {
   );
 }
 
-export async function createSession(): Promise<string> {
+export interface ICreateSessionOptions {
+  proxyServer?: string;
+}
+
+export async function createSession(options: ICreateSessionOptions = {}): Promise<string> {
   const id = `session-${nanoid(8)}`;
   const executablePath = findChromePath();
   logger.info('Using Chrome executable', { path: executablePath });
+  const args = [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-blink-features=AutomationControlled'
+  ];
+  if (options.proxyServer) {
+    args.push(`--proxy-server=${options.proxyServer}`);
+  }
   const browser = await puppeteer.launch({
     executablePath,
     headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-blink-features=AutomationControlled'
-    ]
+    args
   });
   const pages = await browser.pages();
   const page = (pages[0] ?? await browser.newPage()) as Page;

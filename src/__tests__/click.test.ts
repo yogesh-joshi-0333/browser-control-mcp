@@ -93,4 +93,31 @@ describe('browser_click', () => {
 
     expect(result.isError).toBe(true);
   });
+
+  it('clicks inside a specific frame by index, using the simple DOM click path (frames have no .mouse)', async () => {
+    const frameEvaluate = jest.fn<(...args: unknown[]) => Promise<void>>().mockResolvedValue(undefined);
+    const frameWaitForSelector = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    const mockPage = {
+      frames: jest.fn().mockReturnValue([{ waitForSelector: frameWaitForSelector, evaluate: frameEvaluate }])
+    };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    const result = await clickTool.handler({ selector: '#btn', frameIndex: 0, sessionId: 'session-abc12345' });
+
+    expect(result.isError).toBeFalsy();
+    expect(frameEvaluate).toHaveBeenCalled();
+  });
+
+  it('errors with FRAME_NOT_FOUND for an out-of-range frameIndex on click', async () => {
+    const mockPage = { frames: jest.fn().mockReturnValue([]) };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    const result = await clickTool.handler({ selector: '#btn', frameIndex: 2, sessionId: 'session-abc12345' });
+
+    expect(result.isError).toBe(true);
+    const parsed = JSON.parse((result.content[0] as { text: string }).text);
+    expect(parsed.code).toBe('FRAME_NOT_FOUND');
+  });
 });

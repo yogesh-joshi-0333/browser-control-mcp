@@ -70,4 +70,15 @@ describe('mode-selector', () => {
     clearDefaultMode();
     expect(getDefaultMode()).toBeNull();
   });
+
+  it('forwards proxyServer to createSession when creating a new headless session', async () => {
+    mockCreateSession.mockResolvedValue('session-proxy1');
+    await selectMode({ forceMode: 'headless', proxyServer: '127.0.0.1:8888' });
+    expect(mockCreateSession).toHaveBeenCalledWith({ proxyServer: '127.0.0.1:8888' });
+  });
+
+  it('does not call createSession at all when sessionId is already provided (proxyServer ignored)', async () => {
+    await selectMode({ sessionId: 'session-existing', proxyServer: '127.0.0.1:8888' });
+    expect(mockCreateSession).not.toHaveBeenCalled();
+  });
 });

@@ -12,30 +12,44 @@ export const getDomTool: ITool = {
     title: 'Get Browser DOM',
     description: 'Get the HTML source code of the current page (or a scoped subtree). Returns the rendered DOM including dynamically loaded content. Use this to: find CSS selectors for browser_click/browser_type, understand page structure, check element attributes and classes, inspect form fields, or analyze the page content as HTML or plain text. For large pages, prefer browser_snapshot (accessibility-tree view) or scope with `selector` — a full-page dump can be tens of thousands of characters.',
     inputSchema: z.object({
-      selector: z.string().optional().describe('CSS selector to scope the result to a single subtree instead of the whole page.'),
+      selector: z.string().optional().describe('CSS selector to scope the result to a single subtree instead of the whole page. Prefix with "pierce/" to reach into shadow DOM.'),
       format: z.enum(['html', 'text']).optional().describe('"html" (default) returns markup. "text" strips tags and returns visible text only — much smaller for reading content.'),
       maxLength: z.number().optional().describe('Truncate the returned dom string to this many characters. Omit for no limit (default).'),
+      frameIndex: z.number().optional().describe('Read a specific iframe by index (from browser_frames) instead of the main page.'),
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
       mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode. Defaults to extension.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
-    const { selector, format, maxLength, sessionId, mode } = args as {
+    const { selector, format, maxLength, frameIndex, sessionId, mode } = args as {
       selector?: string;
       format?: 'html' | 'text';
       maxLength?: number;
+      frameIndex?: number;
       sessionId?: string;
       mode?: 'headless' | 'connect';
     };
     try {
       const modeResult = await selectMode({ sessionId, forceMode: mode });
-      logger.info('browser_get_dom', { mode: modeResult.mode, sessionId: modeResult.sessionId, selector, format });
+      logger.info('browser_get_dom', { mode: modeResult.mode, sessionId: modeResult.sessionId, selector, format, frameIndex });
 
       const session = getSession(modeResult.sessionId!);
 
+      let target: typeof session.page = session.page;
+      if (frameIndex !== undefined) {
+        const frame = session.page.frames()[frameIndex];
+        if (!frame) {
+          return {
+            isError: true,
+            content: [{ type: 'text', text: JSON.stringify({ code: 'FRAME_NOT_FOUND', message: `No frame at index ${frameIndex}` }) }]
+          };
+        }
+        target = frame as unknown as typeof session.page;
+      }
+
       let dom: string;
       if (selector) {
-        const scoped = await session.page.evaluate((sel: string, fmt: string) => {
+        const scoped = await target.evaluate((sel: string, fmt: string) => {
           /* eslint-disable @typescript-eslint/no-explicit-any */
           const win = globalThis as any;
           const el = win.document.querySelector(sel);
@@ -54,7 +68,7 @@ export const getDomTool: ITool = {
         }
         dom = scoped;
       } else {
-        const html = await session.page.content();
+        const html = await target.content();
         dom = format === 'text' ? stripTags(html) : html;
       }
 

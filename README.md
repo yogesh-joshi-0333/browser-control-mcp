@@ -107,6 +107,10 @@ The agent will use the browser tools automatically.
 | `browser_downloads` | Configure a download directory and list downloaded files |
 | `browser_stats` | Cheap page-size pre-check before calling `browser_get_dom` |
 | `browser_macro` | Save a named sequence of tool calls, replay it later |
+| `browser_auth` | Set/clear HTTP Basic/Digest Auth credentials |
+| `browser_emulate` | Device presets, dark mode, timezone, geolocation, permissions, network/CPU throttling |
+| `browser_frames` | List iframes; target one with `frameIndex` on click/type/get_dom |
+| `browser_form_fill` | Fill multiple form fields (inputs, selects, checkboxes) in one call |
 
 ## Browser Modes
 

@@ -31,6 +31,10 @@ import { networkTool } from './tools/network.js';
 import { downloadsTool } from './tools/downloads.js';
 import { statsTool } from './tools/stats.js';
 import { macroTool } from './tools/macro.js';
+import { authTool } from './tools/auth.js';
+import { emulateTool } from './tools/emulate.js';
+import { framesTool } from './tools/frames.js';
+import { formFillTool } from './tools/form.js';
 import { destroyAll } from './puppeteer-manager.js';
 import { registerTool } from './tool-registry.js';
 import type { ITool } from './types.js';
@@ -64,7 +68,11 @@ const tools: ITool[] = [
   networkTool,
   downloadsTool,
   statsTool,
-  macroTool
+  macroTool,
+  authTool,
+  emulateTool,
+  framesTool,
+  formFillTool
 ];
 
 async function shutdown(): Promise<void> {
@@ -78,7 +86,7 @@ async function main(): Promise<void> {
   process.on('SIGINT', () => { void shutdown(); });
 
   const server = new McpServer(
-    { name: 'browser-control', version: '1.3.0' },
+    { name: 'browser-control', version: '1.4.0' },
     {
       capabilities: { logging: {} },
       instructions: [
@@ -143,6 +151,8 @@ async function main(): Promise<void> {
         '    url (REQUIRED, string) — the URL to navigate to',
         '    width (optional, number) — viewport width in pixels (headless only, default 1024)',
         '    height (optional, number) — viewport height in pixels (headless only, default 768)',
+        '    proxyServer (optional, string) — route a NEW session\'s traffic through this proxy, e.g. "127.0.0.1:8080".',
+        '      Ignored if sessionId is set (proxy can only be chosen when the browser launches, not changed after).',
         '    sessionId (optional, string) — reuse an existing headless session',
         '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: url (final URL after navigation), sessionId',
@@ -157,10 +167,13 @@ async function main(): Promise<void> {
         '',
         'browser_click — Click any element on the page (human-like by default)',
         '  Params:',
-        '    selector (REQUIRED, string) — CSS selector of the element to click',
+        '    selector (REQUIRED, string) — CSS selector of the element to click. Prefix "pierce/" to reach shadow DOM.',
         '    humanClick (optional, boolean, default true) — simulate full human mouse events',
         '      true: moves mouse to element center, fires mouseover→mouseenter→mousemove→mousedown→focus→mouseup→click',
         '      false: simple el.click() — faster but may not work with Select2/jQuery/custom dropdowns',
+        '      Ignored (always simple click) when frameIndex is set — frames have no mouse of their own.',
+        '    frameIndex (optional, number) — click inside a specific iframe by index (from browser_frames) instead',
+        '      of the main page',
         '    sessionId (optional, string) — headless session ID',
         '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { success: true }',
@@ -170,8 +183,9 @@ async function main(): Promise<void> {
         '',
         'browser_type — Type text into any input field',
         '  Params:',
-        '    selector (REQUIRED, string) — CSS selector of the input/textarea to type into',
+        '    selector (REQUIRED, string) — CSS selector of the input/textarea to type into. Prefix "pierce/" for shadow DOM.',
         '    text (REQUIRED, string) — the text to type',
+        '    frameIndex (optional, number) — type inside a specific iframe by index (from browser_frames)',
         '    sessionId (optional, string) — headless session ID',
         '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { success: true }',
@@ -194,15 +208,53 @@ async function main(): Promise<void> {
         '',
         'browser_get_dom — Get HTML (or plain text) source of the current page, optionally scoped',
         '  Params:',
-        '    selector (optional, string) — scope to one subtree instead of the whole page',
+        '    selector (optional, string) — scope to one subtree instead of the whole page. Prefix "pierce/" for shadow DOM.',
         '    format (optional, "html" or "text", default "html") — "text" strips tags, much smaller',
         '    maxLength (optional, number) — truncate to this many characters (default: unlimited)',
+        '    frameIndex (optional, number) — read a specific iframe by index (from browser_frames)',
         '    sessionId (optional, string) — headless session ID',
         '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { dom } — or { dom, truncated: true, totalLength } if maxLength was hit',
         '  Useful for: finding CSS selectors, understanding page structure, checking element attributes',
         '  WARNING: a full unscoped HTML dump can be tens of thousands of characters. Prefer',
         '  browser_snapshot for exploring a page, or pass selector/format/maxLength to scope this down.',
+        '',
+        'browser_frames — List all iframes on the current page',
+        '  Params: sessionId, mode — standard params',
+        '  Returns: { frames: [{ index, url, name }] }',
+        '  Pass an entry\'s index as frameIndex to browser_click/browser_type/browser_get_dom to target that iframe.',
+        '  Shadow DOM does NOT need this tool — prefix any selector with "pierce/" instead (no frameIndex needed).',
+        '',
+        'browser_form_fill — Fill multiple form fields in one call',
+        '  Params:',
+        '    fields (REQUIRED, object) — map of CSS selector -> value, e.g. {"#email":"a@b.com","#country":"IN"}',
+        '    submitSelector (optional, string) — CSS selector of a submit button to click after filling everything',
+        '    sessionId, mode — standard params',
+        '  Automatically picks the right interaction per element: types into text inputs/textareas, uses native',
+        '  <select> selection for dropdowns, clicks checkboxes/radios (value "true"/"1" means check it).',
+        '  Returns: { success: true, filled: [...selectors] }',
+        '',
+        'browser_auth — Set or clear HTTP Basic/Digest Auth credentials',
+        '  Params:',
+        '    username, password (required unless clear:true)',
+        '    clear (optional, boolean) — remove previously set credentials',
+        '    sessionId, mode — standard params',
+        '  Call BEFORE browser_navigate to a password-protected URL (a native browser auth dialog, not a page form).',
+        '',
+        'browser_emulate — Emulate device/environment conditions on the current page',
+        '  Params (pass only what you need, each applies independently):',
+        '    device (optional, string) — known device name, e.g. "iPhone 15 Pro", "Pixel 7" (sets viewport+UA+touch)',
+        '    colorScheme (optional, "light"|"dark"|"no-preference")',
+        '    reducedMotion (optional, "reduce"|"no-preference")',
+        '    timezone (optional, string) — IANA id, e.g. "America/New_York"',
+        '    locale (optional, string) — sent as Accept-Language header (approximation)',
+        '    geolocation (optional, {latitude, longitude}) — also grants the geolocation permission',
+        '    permissions (optional, string[]) — e.g. ["clipboard-read","clipboard-write","notifications"]',
+        '    networkThrottle (optional, "Slow 3G"|"Fast 3G"|"Slow 4G"|"Fast 4G"|"offline"|"none")',
+        '    cpuThrottle (optional, number) — slowdown factor, e.g. 4 = 4x slower; pass 1 to clear',
+        '    sessionId, mode — standard params',
+        '  Returns: { success: true, applied: [...names of what was actually changed] }',
+        '  Use cases: test responsive/mobile layouts, dark-mode UI, slow-network behavior, geolocation-gated features',
         '',
         'browser_snapshot — Get a compact accessibility-tree view (interactive/semantic elements only)',
         '  Params:',

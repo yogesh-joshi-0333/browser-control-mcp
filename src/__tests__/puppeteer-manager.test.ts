@@ -107,4 +107,20 @@ describe('PuppeteerManager', () => {
     const id = await createSession();
     expect(getDownloadPath(id)).toBeUndefined();
   }, 30000);
+
+  it('createSession passes a proxyServer through to the real Chrome launch args', async () => {
+    const id = await createSession({ proxyServer: '127.0.0.1:9999' });
+    const session = getSession(id);
+    const spawnArgs = session.browser.process()?.spawnargs ?? [];
+
+    expect(spawnArgs.some(arg => arg === '--proxy-server=127.0.0.1:9999')).toBe(true);
+  }, 30000);
+
+  it('createSession with no proxyServer omits the --proxy-server flag', async () => {
+    const id = await createSession();
+    const session = getSession(id);
+    const spawnArgs = session.browser.process()?.spawnargs ?? [];
+
+    expect(spawnArgs.some(arg => arg.startsWith('--proxy-server='))).toBe(false);
+  }, 30000);
 });

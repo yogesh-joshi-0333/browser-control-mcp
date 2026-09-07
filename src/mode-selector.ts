@@ -11,6 +11,7 @@ export interface IModeResult {
 interface ISelectModeOptions {
   sessionId?: string;
   forceMode?: BrowserMode;
+  proxyServer?: string;
 }
 
 // Module-level default mode — set by browser_select_mode, read by all tools
@@ -29,7 +30,7 @@ export function clearDefaultMode(): void {
 }
 
 export async function selectMode(options: ISelectModeOptions = {}): Promise<IModeResult> {
-  const { sessionId, forceMode } = options;
+  const { sessionId, forceMode, proxyServer } = options;
 
   // Session already exists — return as headless (it's a Puppeteer session either way)
   if (sessionId) {
@@ -45,6 +46,6 @@ export async function selectMode(options: ISelectModeOptions = {}): Promise<IMod
   }
 
   // Default: headless
-  const newSessionId = await createSession();
+  const newSessionId = await createSession({ proxyServer });
   return { mode: 'headless', sessionId: newSessionId };
 }

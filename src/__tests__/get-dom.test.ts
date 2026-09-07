@@ -115,6 +115,35 @@ describe('browser_get_dom', () => {
     expect(parsed.totalLength).toBe(longHtml.length);
   });
 
+  it('with frameIndex, returns that frame\'s content instead of the main page', async () => {
+    const frameContent = jest.fn<() => Promise<string>>().mockResolvedValue('<html><body>frame content</body></html>');
+    const mockPage = {
+      content: jest.fn<() => Promise<string>>(),
+      frames: jest.fn().mockReturnValue([{ content: frameContent }])
+    };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    const result = await getDomTool.handler({ sessionId: 'session-abc12345', frameIndex: 0 });
+
+    expect(result.isError).toBeFalsy();
+    const parsed = JSON.parse((result.content[0] as { text: string }).text);
+    expect(parsed.dom).toBe('<html><body>frame content</body></html>');
+    expect(mockPage.content).not.toHaveBeenCalled();
+  });
+
+  it('errors with FRAME_NOT_FOUND for an out-of-range frameIndex', async () => {
+    const mockPage = { content: jest.fn(), frames: jest.fn().mockReturnValue([]) };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    const result = await getDomTool.handler({ sessionId: 'session-abc12345', frameIndex: 2 });
+
+    expect(result.isError).toBe(true);
+    const parsed = JSON.parse((result.content[0] as { text: string }).text);
+    expect(parsed.code).toBe('FRAME_NOT_FOUND');
+  });
+
   it('does not set truncated when maxLength is not provided (default unlimited, backward compatible)', async () => {
     const longHtml = '<html><body>' + 'x'.repeat(100) + '</body></html>';
     const mockPage = {

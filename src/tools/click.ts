@@ -10,18 +10,20 @@ export const clickTool: ITool = {
   name: 'browser_click',
   options: {
     title: 'Browser Click',
-    description: 'Click any element on the page by CSS selector — buttons, links, menus, dropdowns, checkboxes, tabs, etc. Examples: "#submit-btn", "button[type=submit]", ".nav-link", "a.login". Waits for the element to be visible, clicks it, then waits for the page to stabilize (handles AJAX, animations, re-renders). Use browser_get_dom first if you need to find the right selector.',
+    description: 'Click any element on the page by CSS selector — buttons, links, menus, dropdowns, checkboxes, tabs, etc. Examples: "#submit-btn", "button[type=submit]", ".nav-link", "a.login". Waits for the element to be visible, clicks it, then waits for the page to stabilize (handles AJAX, animations, re-renders). Use browser_get_dom first if you need to find the right selector. To click inside an iframe, pass frameIndex from browser_frames (this always uses the simple DOM-click path, since humanClick\'s mouse simulation only works on the main page). To reach into shadow DOM, prefix the selector with "pierce/" instead.',
     inputSchema: z.object({
-      selector: z.string().describe('CSS selector of the element to click.'),
-      humanClick: z.boolean().default(true).describe('If true (default), simulates full human-like mouse event chain: mouseover → mouseenter → mousemove → mousedown → focus → mouseup → click. Required for Select2/jQuery dropdowns, custom widgets, and JS-heavy UIs. Set false for simple links/buttons.'),
+      selector: z.string().describe('CSS selector of the element to click. Prefix with "pierce/" to reach into shadow DOM.'),
+      humanClick: z.boolean().default(true).describe('If true (default), simulates full human-like mouse event chain: mouseover → mouseenter → mousemove → mousedown → focus → mouseup → click. Required for Select2/jQuery dropdowns, custom widgets, and JS-heavy UIs. Set false for simple links/buttons. Ignored (always simple click) when frameIndex is set.'),
+      frameIndex: z.number().optional().describe('Target a specific iframe by index (from browser_frames) instead of the main page.'),
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
       mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode. Defaults to extension.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
-    const { selector, humanClick = true, sessionId, mode } = args as {
+    const { selector, humanClick = true, frameIndex, sessionId, mode } = args as {
       selector?: string;
       humanClick?: boolean;
+      frameIndex?: number;
       sessionId?: string;
       mode?: 'headless' | 'connect';
     };
@@ -41,6 +43,26 @@ export const clickTool: ITool = {
       logger.info('browser_click', { mode: modeResult.mode, sessionId: modeResult.sessionId, selector, humanClick });
 
       const session = getSession(modeResult.sessionId!);
+
+      if (frameIndex !== undefined) {
+        const frame = session.page.frames()[frameIndex];
+        if (!frame) {
+          return {
+            isError: true,
+            content: [{ type: 'text', text: JSON.stringify({ code: 'FRAME_NOT_FOUND', message: `No frame at index ${frameIndex}` }) }]
+          };
+        }
+        await frame.waitForSelector(selector, { visible: true, timeout: 5000 });
+        await frame.evaluate((sel: string) => {
+          /* eslint-disable @typescript-eslint/no-explicit-any */
+          const win = globalThis as any;
+          const el = win.document.querySelector(sel);
+          if (!el) throw new Error(`Element not found: ${sel}`);
+          el.click();
+        }, selector);
+        return { content: [{ type: 'text', text: JSON.stringify({ success: true }) }] };
+      }
+
       // Wait for element to be present and visible before clicking
       await session.page.waitForSelector(selector, { visible: true, timeout: 5000 });
 

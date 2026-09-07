@@ -61,4 +61,34 @@ describe('browser_type', () => {
     const parsed = JSON.parse((result.content[0] as { text: string }).text);
     expect(parsed.code).toBe('EXTENSION_NOT_CONNECTED');
   });
+
+  it('types into a specific frame by index instead of the main page', async () => {
+    const mainPage = { type: jest.fn(), waitForSelector: jest.fn() };
+    const frameType = jest.fn<(selector: string, text: string) => Promise<void>>().mockResolvedValue(undefined);
+    const frameWaitForSelector = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    const mockPage = {
+      ...mainPage,
+      frames: jest.fn().mockReturnValue([{ type: frameType, waitForSelector: frameWaitForSelector }])
+    };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    const result = await typeTool.handler({ selector: '#input', text: 'hello', frameIndex: 0, sessionId: 'session-abc12345' });
+
+    expect(result.isError).toBeFalsy();
+    expect(frameType).toHaveBeenCalledWith('#input', 'hello');
+    expect(mainPage.type).not.toHaveBeenCalled();
+  });
+
+  it('errors with FRAME_NOT_FOUND for an out-of-range frameIndex', async () => {
+    const mockPage = { type: jest.fn(), waitForSelector: jest.fn(), frames: jest.fn().mockReturnValue([]) };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    const result = await typeTool.handler({ selector: '#input', text: 'hello', frameIndex: 3, sessionId: 'session-abc12345' });
+
+    expect(result.isError).toBe(true);
+    const parsed = JSON.parse((result.content[0] as { text: string }).text);
+    expect(parsed.code).toBe('FRAME_NOT_FOUND');
+  });
 });

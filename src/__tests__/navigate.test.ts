@@ -63,4 +63,18 @@ describe('browser_navigate', () => {
 
     expect(result.isError).toBe(true);
   });
+
+  it('forwards proxyServer to selectMode', async () => {
+    const mockPage = {
+      goto: jest.fn<() => Promise<null>>().mockResolvedValue(null),
+      url: jest.fn<() => string>().mockReturnValue('https://example.com'),
+      waitForFunction: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
+    };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    await navigateTool.handler({ url: 'https://example.com', proxyServer: '127.0.0.1:8080' });
+
+    expect(mockSelectMode).toHaveBeenCalledWith({ sessionId: undefined, forceMode: undefined, proxyServer: '127.0.0.1:8080' });
+  });
 });

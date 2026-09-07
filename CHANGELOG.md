@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-09-07
+
+### Added
+- `browser_auth` — set/clear HTTP Basic/Digest Auth credentials for password-protected sites.
+- `browser_emulate` — device presets, dark mode/reduced-motion, timezone, locale, geolocation, permissions, network throttling presets, and CPU throttling, all in one tool.
+- `browser_frames` — list iframes on the page; `browser_click`/`browser_type`/`browser_get_dom` gained a `frameIndex` param to target one directly.
+- Shadow DOM support across all existing selector-based tools, for free: prefix any selector with `pierce/` (Puppeteer's built-in shadow-piercing query handler) — no code change needed, just documented.
+- `browser_navigate` gained a `proxyServer` param to route a new headless session through a proxy.
+- `browser_form_fill` — fill multiple form fields (text inputs, `<select>`, checkboxes/radios) in one call, with an optional submit click.
+
 ## [1.3.0] - 2026-09-07
 
 ### Added
