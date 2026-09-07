@@ -4,8 +4,16 @@ import {
   getSession,
   destroySession,
   listSessions,
-  destroyAll
+  destroyAll,
+  getNetworkLog,
+  clearNetworkLog,
+  setBlockedResourceTypes,
+  setDownloadPath,
+  getDownloadPath
 } from '../puppeteer-manager.js';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 describe('PuppeteerManager', () => {
   afterEach(async () => {
@@ -44,5 +52,59 @@ describe('PuppeteerManager', () => {
     await createSession();
     await destroyAll();
     expect(listSessions()).toHaveLength(0);
+  }, 30000);
+
+  it('captures real network requests made during navigation', async () => {
+    const id = await createSession();
+    const session = getSession(id);
+    await session.page.goto('https://example.com', { waitUntil: 'networkidle0' });
+
+    const log = getNetworkLog(id);
+
+    expect(log.length).toBeGreaterThan(0);
+    const docEntry = log.find(entry => entry.url === 'https://example.com/');
+    expect(docEntry).toBeDefined();
+    expect(docEntry?.method).toBe('GET');
+    expect(docEntry?.status).toBe(200);
+  }, 30000);
+
+  it('clearNetworkLog empties the log for a session', async () => {
+    const id = await createSession();
+    const session = getSession(id);
+    await session.page.goto('https://example.com', { waitUntil: 'networkidle0' });
+    expect(getNetworkLog(id).length).toBeGreaterThan(0);
+
+    clearNetworkLog(id);
+
+    expect(getNetworkLog(id)).toHaveLength(0);
+  }, 30000);
+
+  it('blocks requests for resource types marked blocked, logging them as "blocked"', async () => {
+    const id = await createSession();
+    const session = getSession(id);
+    setBlockedResourceTypes(id, ['image']);
+
+    await session.page.setContent('<html><body><img src="https://blocked.invalid/test.png"></body></html>');
+    await new Promise(r => setTimeout(r, 200));
+
+    const log = getNetworkLog(id);
+    const imageEntry = log.find(entry => entry.url === 'https://blocked.invalid/test.png');
+    expect(imageEntry).toBeDefined();
+    expect(imageEntry?.status).toBe('blocked');
+  }, 30000);
+
+  it('setDownloadPath configures real CDP download behavior without throwing, and is readable via getDownloadPath', async () => {
+    const id = await createSession();
+    const dir = mkdtempSync(join(tmpdir(), 'bc-mcp-download-test-'));
+
+    await setDownloadPath(id, dir);
+
+    expect(getDownloadPath(id)).toBe(dir);
+    rmSync(dir, { recursive: true, force: true });
+  }, 30000);
+
+  it('getDownloadPath returns undefined when never configured', async () => {
+    const id = await createSession();
+    expect(getDownloadPath(id)).toBeUndefined();
   }, 30000);
 });

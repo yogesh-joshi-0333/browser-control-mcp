@@ -25,7 +25,7 @@ describe('browser_execute', () => {
       evaluate: jest.fn<() => Promise<string>>().mockResolvedValue('test result')
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await executeTool.handler({ code: 'return document.title', sessionId: 'session-abc12345' });
 
@@ -49,7 +49,7 @@ describe('browser_execute', () => {
       evaluate: jest.fn<() => Promise<never>>().mockRejectedValue(new Error('Evaluation failed'))
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await executeTool.handler({ code: 'throw new Error("oops")', sessionId: 'session-abc12345' });
 
@@ -63,7 +63,7 @@ describe('browser_execute', () => {
       evaluate: jest.fn<() => Promise<undefined>>().mockResolvedValue(undefined)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await executeTool.handler({ code: 'console.log("hi")', sessionId: 'session-abc12345' });
 

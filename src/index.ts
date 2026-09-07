@@ -10,6 +10,7 @@ import { clickTool } from './tools/click.js';
 import { scrollTool } from './tools/scroll.js';
 import { typeTool } from './tools/type.js';
 import { getDomTool } from './tools/get-dom.js';
+import { snapshotTool } from './tools/snapshot.js';
 import { consoleLogsTool } from './tools/console-logs.js';
 import { selectModeTool } from './tools/select-mode.js';
 import { executeTool } from './tools/execute.js';
@@ -22,6 +23,12 @@ import { fileUploadTool } from './tools/file-upload.js';
 import { dragDropTool } from './tools/drag-drop.js';
 import { tabsTool } from './tools/tabs.js';
 import { navigateBackTool } from './tools/navigate-back.js';
+import { cookiesTool } from './tools/cookies.js';
+import { storageTool } from './tools/storage.js';
+import { extractTool } from './tools/extract.js';
+import { pdfTool } from './tools/pdf.js';
+import { networkTool } from './tools/network.js';
+import { downloadsTool } from './tools/downloads.js';
 import { destroyAll } from './puppeteer-manager.js';
 import type { ITool } from './types.js';
 
@@ -35,6 +42,7 @@ const tools: ITool[] = [
   scrollTool,
   typeTool,
   getDomTool,
+  snapshotTool,
   consoleLogsTool,
   executeTool,
   keyboardTool,
@@ -45,7 +53,13 @@ const tools: ITool[] = [
   fileUploadTool,
   dragDropTool,
   tabsTool,
-  navigateBackTool
+  navigateBackTool,
+  cookiesTool,
+  storageTool,
+  extractTool,
+  pdfTool,
+  networkTool,
+  downloadsTool
 ];
 
 async function shutdown(): Promise<void> {
@@ -59,7 +73,7 @@ async function main(): Promise<void> {
   process.on('SIGINT', () => { void shutdown(); });
 
   const server = new McpServer(
-    { name: 'browser-control', version: '1.0.0' },
+    { name: 'browser-control', version: '1.2.0' },
     {
       capabilities: { logging: {} },
       instructions: [
@@ -173,12 +187,27 @@ async function main(): Promise<void> {
         '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { url } — the current page URL',
         '',
-        'browser_get_dom — Get full HTML source of the current page',
+        'browser_get_dom — Get HTML (or plain text) source of the current page, optionally scoped',
         '  Params:',
+        '    selector (optional, string) — scope to one subtree instead of the whole page',
+        '    format (optional, "html" or "text", default "html") — "text" strips tags, much smaller',
+        '    maxLength (optional, number) — truncate to this many characters (default: unlimited)',
         '    sessionId (optional, string) — headless session ID',
         '    mode (optional, "connect" or "headless") — override session default',
-        '  Returns: { dom } — complete HTML content of the page',
+        '  Returns: { dom } — or { dom, truncated: true, totalLength } if maxLength was hit',
         '  Useful for: finding CSS selectors, understanding page structure, checking element attributes',
+        '  WARNING: a full unscoped HTML dump can be tens of thousands of characters. Prefer',
+        '  browser_snapshot for exploring a page, or pass selector/format/maxLength to scope this down.',
+        '',
+        'browser_snapshot — Get a compact accessibility-tree view (interactive/semantic elements only)',
+        '  Params:',
+        '    maxNodes (optional, number, default 300) — cap on elements included',
+        '    sessionId (optional, string) — headless session ID',
+        '    mode (optional, "connect" or "headless") — override session default',
+        '  Returns: { snapshot } — indented text list like: "- button \\"Submit\\" [ref=e12]"',
+        '  PREFER THIS over browser_get_dom when exploring an unfamiliar page — it costs a tiny',
+        '  fraction of the tokens a full HTML dump does. Each [ref=e12] is also a valid CSS selector:',
+        '  pass \'[data-mcp-ref="e12"]\' directly as the selector for browser_click/type/hover/select_option.',
         '',
         'browser_execute — Run arbitrary JavaScript on the page',
         '  Params:',
@@ -268,6 +297,52 @@ async function main(): Promise<void> {
         'browser_navigate_back — Go back to previous page',
         '  Params: sessionId, mode — standard params',
         '  Equivalent to clicking the browser back button',
+        '',
+        'browser_cookies — Get, set, delete, or clear cookies on the current page',
+        '  Params:',
+        '    action (REQUIRED, "get" | "set" | "delete" | "clear")',
+        '    name, value, domain, path, httpOnly, secure, expires — for "set"/"delete"',
+        '    sessionId, mode — standard params',
+        '  Use cases: inspect auth/session cookies, inject a saved session to skip login, clean cookies between test runs',
+        '',
+        'browser_storage — Get, set, or clear localStorage/sessionStorage on the current page',
+        '  Params:',
+        '    action (REQUIRED, "get" | "set" | "clear")',
+        '    area ("localStorage" | "sessionStorage"), key, value — for "set"',
+        '    sessionId, mode — standard params',
+        '  Combine with browser_cookies to save/restore full session state across calls',
+        '',
+        'browser_extract — Extract structured text/attributes without dumping raw HTML',
+        '  Params:',
+        '    selector (optional) — scope extraction; omit to get the whole page\'s visible text',
+        '    attribute (optional) — extract this attribute (e.g. "href") instead of text',
+        '    multiple (optional, boolean) — return an array for every match, not just the first',
+        '    sessionId, mode — standard params',
+        '  PREFER THIS over browser_get_dom when you just need content, not markup',
+        '',
+        'browser_pdf — Render the current page to a PDF file on disk',
+        '  Params:',
+        '    path (REQUIRED, string) — absolute file path to save to',
+        '    format (optional, "A4"|"Letter"|"Legal"|"Tabloid"|"A3"|"A5", default "A4")',
+        '    landscape (optional, boolean, default false)',
+        '    sessionId, mode — standard params',
+        '  Returns: { success, path, sizeBytes } — the PDF itself is saved to disk, not returned inline',
+        '',
+        'browser_network — Inspect or control network traffic (headless mode only for blocking)',
+        '  Params:',
+        '    action (REQUIRED, "list" | "clear" | "block" | "unblock")',
+        '    resourceTypes (for "block", e.g. ["image","font","stylesheet","media"])',
+        '    limit (for "list", default 100)',
+        '    sessionId, mode — standard params',
+        '  Use cases: debug failed requests, check response statuses, block images/fonts to speed up a page',
+        '  NOTE: blocking is unavailable in connect mode (would intercept the user\'s live browsing)',
+        '',
+        'browser_downloads — Configure a download directory and list what has landed there',
+        '  Params:',
+        '    action (REQUIRED, "configure" | "list")',
+        '    path (REQUIRED for "configure") — absolute directory to save downloads to',
+        '    sessionId, mode — standard params',
+        '  Call "configure" BEFORE triggering a download (e.g. clicking a download link), then "list" after',
         '',
         '=== COMMON USE CASES ===',
         '',

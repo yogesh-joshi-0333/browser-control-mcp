@@ -26,7 +26,7 @@ describe('browser_wait_for', () => {
       waitForFunction: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await waitForTool.handler({ selector: '.modal', sessionId: 'session-abc12345' });
 
@@ -43,7 +43,7 @@ describe('browser_wait_for', () => {
       waitForFunction: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await waitForTool.handler({ text: 'Success!', sessionId: 'session-abc12345' });
 
@@ -64,7 +64,7 @@ describe('browser_wait_for', () => {
       waitForFunction: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await waitForTool.handler({ textGone: 'Loading...', sessionId: 'session-abc12345' });
 
@@ -93,7 +93,7 @@ describe('browser_wait_for', () => {
       waitForFunction: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await waitForTool.handler({ selector: '.missing', sessionId: 'session-abc12345' });
 

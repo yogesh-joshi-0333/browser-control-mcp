@@ -23,7 +23,7 @@ describe('browser_get_url', () => {
   it('returns URL from headless mode', async () => {
     const mockPage = { url: jest.fn<() => string>().mockReturnValue('https://puppeteer.example.com') };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await getUrlTool.handler({ sessionId: 'session-abc12345' });
 

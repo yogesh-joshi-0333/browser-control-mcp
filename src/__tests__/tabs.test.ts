@@ -34,7 +34,7 @@ describe('browser_tabs', () => {
       pages: jest.fn<() => Promise<typeof mockPage1[]>>().mockResolvedValue([mockPage1, mockPage2])
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage1 as never, browser: mockBrowser as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage1 as never, browser: mockBrowser as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await tabsTool.handler({ action: 'list', sessionId: 'session-abc12345' });
 
@@ -59,7 +59,7 @@ describe('browser_tabs', () => {
       newPage: jest.fn<() => Promise<typeof mockNewPage>>().mockResolvedValue(mockNewPage)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: mockBrowser as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: mockBrowser as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await tabsTool.handler({ action: 'new', url: 'https://new.com', sessionId: 'session-abc12345' });
 

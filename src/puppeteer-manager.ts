@@ -1,5 +1,5 @@
-import puppeteer from 'puppeteer-core';
 import type { Browser, Page } from 'puppeteer-core';
+import { stealthPuppeteer as puppeteer } from './stealth-browser.js';
 import { nanoid } from 'nanoid';
 import { execSync, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -8,15 +8,69 @@ import { logger } from './logger.js';
 import { DEBUG_PORT } from './config.js';
 import type { IErrorResponse } from './types.js';
 
+export interface INetworkEntry {
+  url: string;
+  method: string;
+  resourceType: string;
+  status: number | 'blocked' | null;
+  timestamp: string;
+}
+
 interface ISession {
   id: string;
   browser: Browser;
   page: Page;
   createdAt: Date;
   logs: Array<{ type: string; text: string; timestamp: string }>;
+  networkLog: INetworkEntry[];
+  blockedResourceTypes: Set<string>;
+  downloadPath?: string;
 }
 
 const sessions = new Map<string, ISession>();
+const MAX_NETWORK_LOG_ENTRIES = 500;
+
+/**
+ * Enables request interception and records every request/response on the
+ * session's networkLog (capped at MAX_NETWORK_LOG_ENTRIES). Requests whose
+ * resourceType is in session.blockedResourceTypes are aborted instead of
+ * continued, and logged with status "blocked".
+ */
+async function attachNetworkCapture(session: ISession): Promise<void> {
+  await session.page.setRequestInterception(true);
+
+  session.page.on('request', (request) => {
+    const resourceType = request.resourceType();
+    const blocked = session.blockedResourceTypes.has(resourceType);
+
+    session.networkLog.push({
+      url: request.url(),
+      method: request.method(),
+      resourceType,
+      status: blocked ? 'blocked' : null,
+      timestamp: new Date().toISOString()
+    });
+    if (session.networkLog.length > MAX_NETWORK_LOG_ENTRIES) {
+      session.networkLog.shift();
+    }
+
+    if (blocked) {
+      void request.abort();
+    } else {
+      void request.continue();
+    }
+  });
+
+  session.page.on('response', (response) => {
+    const url = response.url();
+    for (let i = session.networkLog.length - 1; i >= 0; i--) {
+      if (session.networkLog[i].url === url && session.networkLog[i].status === null) {
+        session.networkLog[i].status = response.status();
+        break;
+      }
+    }
+  });
+}
 
 /**
  * Find Chrome/Chromium executable on the system.
@@ -78,19 +132,22 @@ export async function createSession(): Promise<string> {
     ]
   });
   const pages = await browser.pages();
-  const page = pages[0] ?? await browser.newPage();
+  const page = (pages[0] ?? await browser.newPage()) as Page;
   // Default viewport — can be overridden per navigate call
   await page.setViewport({ width: 1024, height: 768 });
-  // Spoof user agent and hide automation signals so sites load all JS
+  // Spoof user agent; stealth plugin (registered in stealth-browser.ts) handles
+  // navigator.webdriver, plugins/languages, permissions.query, and other evasions.
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => false });
-  });
   const sessionLogs: Array<{ type: string; text: string; timestamp: string }> = [];
   page.on('console', (msg) => {
     sessionLogs.push({ type: msg.type(), text: msg.text(), timestamp: new Date().toISOString() });
   });
-  sessions.set(id, { id, browser, page, createdAt: new Date(), logs: sessionLogs });
+  const session: ISession = {
+    id, browser, page, createdAt: new Date(), logs: sessionLogs,
+    networkLog: [], blockedResourceTypes: new Set()
+  };
+  await attachNetworkCapture(session);
+  sessions.set(id, session);
   logger.info('Puppeteer session created', { id });
   return id;
 }
@@ -111,6 +168,40 @@ export function getSessionLogs(id: string): Array<{ type: string; text: string; 
     throw new Error(error.code);
   }
   return session.logs;
+}
+
+export function getNetworkLog(id: string): INetworkEntry[] {
+  return getSession(id).networkLog;
+}
+
+export function clearNetworkLog(id: string): void {
+  getSession(id).networkLog = [];
+}
+
+export function setBlockedResourceTypes(id: string, resourceTypes: string[]): void {
+  getSession(id).blockedResourceTypes = new Set(resourceTypes);
+}
+
+export function getBlockedResourceTypes(id: string): string[] {
+  return Array.from(getSession(id).blockedResourceTypes);
+}
+
+interface ICdpDownloadBehavior {
+  setDownloadBehavior(behavior: { policy: 'allow'; downloadPath: string }): Promise<void>;
+}
+
+export async function setDownloadPath(id: string, downloadPath: string): Promise<void> {
+  const session = getSession(id);
+  // setDownloadBehavior is a CDP-specific capability, not on the public cross-protocol
+  // BrowserContext type — but puppeteer-core's launch()/connect() always give us the
+  // CDP implementation, which does implement it.
+  const context = session.page.browserContext() as unknown as ICdpDownloadBehavior;
+  await context.setDownloadBehavior({ policy: 'allow', downloadPath });
+  session.downloadPath = downloadPath;
+}
+
+export function getDownloadPath(id: string): string | undefined {
+  return getSession(id).downloadPath;
 }
 
 export async function destroySession(id: string): Promise<void> {
@@ -199,13 +290,10 @@ export async function createConnectSession(port: number = DEBUG_PORT): Promise<s
   const browser = await puppeteer.connect({ browserURL });
 
   const pages = await browser.pages();
-  const page = pages[0] ?? await browser.newPage();
+  const page = (pages[0] ?? await browser.newPage()) as Page;
 
-  // Apply same anti-bot protections as createSession()
+  // Apply same anti-bot protections as createSession() (UA + stealth plugin evasions)
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => false });
-  });
 
   // Console log capture
   const sessionLogs: Array<{ type: string; text: string; timestamp: string }> = [];
@@ -213,7 +301,10 @@ export async function createConnectSession(port: number = DEBUG_PORT): Promise<s
     sessionLogs.push({ type: msg.type(), text: msg.text(), timestamp: new Date().toISOString() });
   });
 
-  sessions.set(id, { id, browser, page, createdAt: new Date(), logs: sessionLogs });
+  // NOTE: network capture/blocking is intentionally NOT enabled in connect mode —
+  // this is the user's real, already-in-use Chrome tab, and request interception
+  // adds latency/risk to every request on their live browsing session.
+  sessions.set(id, { id, browser, page, createdAt: new Date(), logs: sessionLogs, networkLog: [], blockedResourceTypes: new Set() });
   logger.info('CDP connect session created', { id });
   return id;
 }

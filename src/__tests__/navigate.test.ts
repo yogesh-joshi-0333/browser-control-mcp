@@ -27,7 +27,7 @@ describe('browser_navigate', () => {
       waitForFunction: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     };
     mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
-    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [] });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
 
     const result = await navigateTool.handler({ url: 'https://example.com', sessionId: 'session-abc12345' });
 

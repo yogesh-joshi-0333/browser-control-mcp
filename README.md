@@ -86,8 +86,25 @@ The agent will use the browser tools automatically.
 | `browser_type` | Type text into input fields |
 | `browser_scroll` | Scroll page by pixel amount |
 | `browser_get_url` | Get current page URL |
-| `browser_get_dom` | Get full HTML source |
+| `browser_get_dom` | Get HTML (or plain text), optionally scoped to a selector |
 | `browser_console_logs` | Read JS console output |
+| `browser_snapshot` | Compact accessibility-tree view, cheaper than a full DOM dump |
+| `browser_extract` | Extract visible text or an attribute, without raw HTML |
+| `browser_keyboard` | Press keys and key combinations |
+| `browser_hover` | Hover over an element |
+| `browser_select_option` | Select from a native `<select>` dropdown |
+| `browser_wait_for` | Wait for an element, text, or timeout |
+| `browser_handle_dialog` | Accept or dismiss alert/confirm/prompt dialogs |
+| `browser_file_upload` | Upload files to a file input |
+| `browser_drag_drop` | Drag and drop between elements |
+| `browser_tabs` | List, open, switch, or close tabs |
+| `browser_navigate_back` | Go back to the previous page |
+| `browser_execute` | Run arbitrary JavaScript in the page |
+| `browser_cookies` | Get, set, delete, or clear cookies |
+| `browser_storage` | Get, set, or clear localStorage/sessionStorage |
+| `browser_pdf` | Render the current page to a PDF file |
+| `browser_network` | List captured requests or block by resource type (headless only) |
+| `browser_downloads` | Configure a download directory and list downloaded files |
 
 ## Browser Modes
 
