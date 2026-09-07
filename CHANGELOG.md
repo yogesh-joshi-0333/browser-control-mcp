@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-09-07
+
+### Added
+- `browser_stats` — cheap pre-check (DOM node count, approx HTML/text length, title/url) so an agent can decide whether a full `browser_get_dom` call is safe before making it.
+- `browser_snapshot` gained a `diff` option — returns only elements added/removed since the last snapshot in that session (diffed by role/name/state/depth, not by ref, since refs are reassigned every call), instead of the full tree.
+- `browser_tabs` gained a `screenshot` action — captures a specific tab by index without switching the active tab, for comparing tabs or peeking at a background one.
+- `browser_macro` — save a named sequence of `{tool, args}` steps once, replay it by name against any session later, collapsing a repeated flow (e.g. login) into one tool call. Backed by a new shared tool registry so macro can invoke any other registered tool's handler directly.
+
 ## [1.2.0] - 2026-09-07
 
 ### Added

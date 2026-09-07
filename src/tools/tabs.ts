@@ -9,9 +9,9 @@ export const tabsTool: ITool = {
   name: 'browser_tabs',
   options: {
     title: 'Browser Tabs',
-    description: 'Manage browser tabs — list open tabs, create new tabs, switch between tabs, or close tabs. Use this for: OAuth flows that open popups, links that open in new tabs, multi-page workflows, or cleaning up tabs. Manages pages within the Puppeteer browser session.',
+    description: 'Manage browser tabs — list open tabs, create new tabs, switch between tabs, close tabs, or screenshot a specific tab WITHOUT switching to it. Use this for: OAuth flows that open popups, links that open in new tabs, multi-page workflows, comparing two open tabs side by side, or cleaning up tabs. Manages pages within the Puppeteer browser session.',
     inputSchema: z.object({
-      action: z.enum(['list', 'new', 'close', 'switch']).describe('Action to perform'),
+      action: z.enum(['list', 'new', 'close', 'switch', 'screenshot']).describe('Action to perform'),
       url: z.string().optional().describe('URL to open in new tab (for "new" action). Defaults to "about:blank"'),
       index: z.number().optional().describe('Tab index for "switch" or "close" actions (0-based)'),
       sessionId: z.string().optional().describe('Puppeteer session ID. Skips mode selection.'),
@@ -119,6 +119,21 @@ export const tabsTool: ITool = {
           return {
             content: [{ type: 'text', text: JSON.stringify({ success: true }) }]
           };
+        }
+
+        case 'screenshot': {
+          const pages = await browser.pages();
+          if (index === undefined || index < 0 || index >= pages.length) {
+            return {
+              isError: true,
+              content: [{
+                type: 'text',
+                text: JSON.stringify({ code: 'INVALID_INDEX', message: `Tab index ${index} is out of range (0-${pages.length - 1})` })
+              }]
+            };
+          }
+          const buffer = await pages[index].screenshot({ type: 'png' });
+          return { content: [{ type: 'image', data: Buffer.from(buffer).toString('base64'), mimeType: 'image/png' }] };
         }
 
         default:

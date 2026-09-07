@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { stripTags, formatSnapshot, type ISnapshotNode } from '../dom-utils.js';
+import { stripTags, formatSnapshot, formatSnapshotLine, diffSnapshotNodes, type ISnapshotNode } from '../dom-utils.js';
 
 describe('stripTags', () => {
   it('removes tags and collapses whitespace between words', () => {
@@ -52,5 +52,37 @@ describe('formatSnapshot', () => {
   it('adds no truncation note when nodes returned equals total', () => {
     const nodes: ISnapshotNode[] = [{ ref: 'e1', depth: 0, role: 'button', name: 'A', state: [] }];
     expect(formatSnapshot(nodes, 1)).not.toContain('more elements');
+  });
+});
+
+describe('formatSnapshotLine', () => {
+  it('formats one node the same way formatSnapshot would, with no truncation note', () => {
+    const node: ISnapshotNode = { ref: 'e1', depth: 1, role: 'link', name: 'Home', state: ['disabled'] };
+    expect(formatSnapshotLine(node)).toBe('  - link "Home" [disabled] [ref=e1]');
+  });
+});
+
+describe('diffSnapshotNodes', () => {
+  it('lists a newly appeared node with a + prefix', () => {
+    const previous: ISnapshotNode[] = [];
+    const current: ISnapshotNode[] = [{ ref: 'e1', depth: 0, role: 'button', name: 'Submit', state: [] }];
+    expect(diffSnapshotNodes(previous, current)).toBe('+ - button "Submit" [ref=e1]');
+  });
+
+  it('lists a disappeared node with a - prefix', () => {
+    const previous: ISnapshotNode[] = [{ ref: 'e1', depth: 0, role: 'button', name: 'Submit', state: [] }];
+    const current: ISnapshotNode[] = [];
+    expect(diffSnapshotNodes(previous, current)).toBe('- - button "Submit" [ref=e1]');
+  });
+
+  it('treats a node as unchanged when role/name/state/depth match, even if its ref number changed', () => {
+    const previous: ISnapshotNode[] = [{ ref: 'e5', depth: 0, role: 'button', name: 'Submit', state: [] }];
+    const current: ISnapshotNode[] = [{ ref: 'e1', depth: 0, role: 'button', name: 'Submit', state: [] }];
+    expect(diffSnapshotNodes(previous, current)).toBe('(no changes since last snapshot)');
+  });
+
+  it('reports no changes when nothing differs', () => {
+    const nodes: ISnapshotNode[] = [{ ref: 'e1', depth: 0, role: 'button', name: 'Submit', state: [] }];
+    expect(diffSnapshotNodes(nodes, nodes)).toBe('(no changes since last snapshot)');
   });
 });

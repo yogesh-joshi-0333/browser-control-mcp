@@ -27,12 +27,19 @@ export interface ISnapshotNode {
  * as an indented text tree, e.g. "- button \"Submit\" [ref=e3]". Appends a
  * truncation note when fewer nodes were returned than were found on the page.
  */
+/**
+ * Formats a single snapshot node as one indented line, e.g.
+ * '  - link "Home" [disabled] [ref=e1]'. Shared by formatSnapshot and by
+ * browser_snapshot's diff mode, which formats added/removed nodes individually.
+ */
+export function formatSnapshotLine({ ref, depth, role, name, state }: ISnapshotNode): string {
+  const namePart = name ? ` "${name}"` : '';
+  const statePart = state.length ? ` [${state.join(', ')}]` : '';
+  return `${'  '.repeat(depth)}- ${role}${namePart}${statePart} [ref=${ref}]`;
+}
+
 export function formatSnapshot(nodes: ISnapshotNode[], totalInteresting: number): string {
-  const lines = nodes.map(({ ref, depth, role, name, state }) => {
-    const namePart = name ? ` "${name}"` : '';
-    const statePart = state.length ? ` [${state.join(', ')}]` : '';
-    return `${'  '.repeat(depth)}- ${role}${namePart}${statePart} [ref=${ref}]`;
-  });
+  const lines = nodes.map(formatSnapshotLine);
 
   if (totalInteresting > nodes.length) {
     const remaining = totalInteresting - nodes.length;
@@ -40,6 +47,30 @@ export function formatSnapshot(nodes: ISnapshotNode[], totalInteresting: number)
   }
 
   return lines.join('\n');
+}
+
+function snapshotNodeKey(node: ISnapshotNode): string {
+  return `${node.depth}|${node.role}|${node.name}|${node.state.join(',')}`;
+}
+
+/**
+ * Diffs two browser_snapshot node lists by (depth, role, name, state) rather
+ * than by ref — refs are reassigned every snapshot call, so comparing by ref
+ * would flag every unchanged element as both removed and re-added.
+ */
+export function diffSnapshotNodes(previous: ISnapshotNode[], current: ISnapshotNode[]): string {
+  const previousKeys = new Set(previous.map(snapshotNodeKey));
+  const currentKeys = new Set(current.map(snapshotNodeKey));
+
+  const added = current.filter(node => !previousKeys.has(snapshotNodeKey(node)));
+  const removed = previous.filter(node => !currentKeys.has(snapshotNodeKey(node)));
+
+  const lines = [
+    ...added.map(node => `+ ${formatSnapshotLine(node)}`),
+    ...removed.map(node => `- ${formatSnapshotLine(node)}`)
+  ];
+
+  return lines.length > 0 ? lines.join('\n') : '(no changes since last snapshot)';
 }
 
 /**

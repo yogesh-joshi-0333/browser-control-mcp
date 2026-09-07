@@ -21,6 +21,34 @@ describe('browser_tabs', () => {
     jest.clearAllMocks();
   });
 
+  it('action "screenshot" captures a specific tab by index without switching the active tab', async () => {
+    const fakeBuffer = Buffer.from('fake-png-data');
+    const mockPage0 = { screenshot: jest.fn() };
+    const mockPage1 = { screenshot: jest.fn<() => Promise<Buffer>>().mockResolvedValue(fakeBuffer) };
+    const mockBrowser = { pages: jest.fn<() => Promise<unknown[]>>().mockResolvedValue([mockPage0, mockPage1]) };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: mockPage0 as never, browser: mockBrowser as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    const result = await tabsTool.handler({ action: 'screenshot', index: 1, sessionId: 'session-abc12345' });
+
+    expect(result.isError).toBeFalsy();
+    expect(result.content[0].type).toBe('image');
+    expect((result.content[0] as { data: string }).data).toBe(fakeBuffer.toString('base64'));
+    expect(mockPage0.screenshot).not.toHaveBeenCalled();
+  });
+
+  it('action "screenshot" requires a valid index', async () => {
+    const mockBrowser = { pages: jest.fn<() => Promise<unknown[]>>().mockResolvedValue([{}]) };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-abc12345' });
+    mockGetSession.mockReturnValue({ id: 'session-abc12345', page: {} as never, browser: mockBrowser as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    const result = await tabsTool.handler({ action: 'screenshot', index: 5, sessionId: 'session-abc12345' });
+
+    expect(result.isError).toBe(true);
+    const parsed = JSON.parse((result.content[0] as { text: string }).text);
+    expect(parsed.code).toBe('INVALID_INDEX');
+  });
+
   it('lists tabs in headless mode', async () => {
     const mockPage1 = {
       url: jest.fn<() => string>().mockReturnValue('https://example.com'),

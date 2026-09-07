@@ -4,9 +4,10 @@ import type { ITool } from '../types.js';
 import { logger } from '../logger.js';
 import { selectMode } from '../mode-selector.js';
 import { getSession } from '../puppeteer-manager.js';
-import { formatSnapshot, type ISnapshotNode } from '../dom-utils.js';
+import { formatSnapshot, diffSnapshotNodes, type ISnapshotNode } from '../dom-utils.js';
 
 const DEFAULT_MAX_NODES = 300;
+const lastSnapshotBySession = new Map<string, ISnapshotNode[]>();
 
 /**
  * Runs in the page context (via page.evaluate). Walks interactive/semantic
@@ -112,24 +113,35 @@ export const snapshotTool: ITool = {
     description:
       'Get a compact accessibility-tree view of the page: interactive and semantic elements (links, buttons, inputs, headings, landmarks) as a small indented text list, each tagged with a stable ref like [ref=e12]. ' +
       'Far cheaper than browser_get_dom for finding what to interact with — use this first when exploring an unfamiliar page. ' +
-      'Every ref is also a valid CSS selector — pass `[data-mcp-ref="e12"]` directly as the `selector` argument to browser_click, browser_type, browser_hover, or browser_select_option.',
+      'Every ref is also a valid CSS selector — pass `[data-mcp-ref="e12"]` directly as the `selector` argument to browser_click, browser_type, browser_hover, or browser_select_option. ' +
+      'Pass diff:true to get only what changed since your last browser_snapshot call in this session — much cheaper than a full snapshot for checking the result of a click/type.',
     inputSchema: z.object({
       maxNodes: z.number().optional().describe(`Maximum number of elements to include (default ${DEFAULT_MAX_NODES}). Lower it for a shorter list, raise it for exhaustive coverage of a large page.`),
+      diff: z.boolean().optional().describe('If true, return only elements added/removed since the last browser_snapshot call for this session, instead of the full tree. First call always returns the full snapshot.'),
       sessionId: z.string().optional().describe('Puppeteer session ID for headless mode. Skips mode selection.'),
       mode: z.enum(['headless', 'connect']).optional().describe('Force a specific mode. Defaults to extension.')
     })
   },
   handler: async (args: Record<string, unknown>): Promise<CallToolResult> => {
-    const { maxNodes, sessionId, mode } = args as { maxNodes?: number; sessionId?: string; mode?: 'headless' | 'connect' };
+    const { maxNodes, diff, sessionId, mode } = args as { maxNodes?: number; diff?: boolean; sessionId?: string; mode?: 'headless' | 'connect' };
     try {
       const modeResult = await selectMode({ sessionId, forceMode: mode });
-      logger.info('browser_snapshot', { mode: modeResult.mode, sessionId: modeResult.sessionId, maxNodes });
+      logger.info('browser_snapshot', { mode: modeResult.mode, sessionId: modeResult.sessionId, maxNodes, diff });
 
       const session = getSession(modeResult.sessionId!);
       const { nodes, totalInteresting } = await session.page.evaluate(collectSnapshot, maxNodes ?? DEFAULT_MAX_NODES);
 
+      let snapshot: string;
+      if (diff) {
+        const previous = lastSnapshotBySession.get(modeResult.sessionId!);
+        snapshot = previous ? diffSnapshotNodes(previous, nodes) : formatSnapshot(nodes, totalInteresting);
+      } else {
+        snapshot = formatSnapshot(nodes, totalInteresting);
+      }
+      lastSnapshotBySession.set(modeResult.sessionId!, nodes);
+
       return {
-        content: [{ type: 'text', text: JSON.stringify({ snapshot: formatSnapshot(nodes, totalInteresting) }) }]
+        content: [{ type: 'text', text: JSON.stringify({ snapshot }) }]
       };
     } catch (error) {
       const err = error as { code?: string; message?: string };

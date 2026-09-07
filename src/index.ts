@@ -29,7 +29,10 @@ import { extractTool } from './tools/extract.js';
 import { pdfTool } from './tools/pdf.js';
 import { networkTool } from './tools/network.js';
 import { downloadsTool } from './tools/downloads.js';
+import { statsTool } from './tools/stats.js';
+import { macroTool } from './tools/macro.js';
 import { destroyAll } from './puppeteer-manager.js';
+import { registerTool } from './tool-registry.js';
 import type { ITool } from './types.js';
 
 const tools: ITool[] = [
@@ -59,7 +62,9 @@ const tools: ITool[] = [
   extractTool,
   pdfTool,
   networkTool,
-  downloadsTool
+  downloadsTool,
+  statsTool,
+  macroTool
 ];
 
 async function shutdown(): Promise<void> {
@@ -73,7 +78,7 @@ async function main(): Promise<void> {
   process.on('SIGINT', () => { void shutdown(); });
 
   const server = new McpServer(
-    { name: 'browser-control', version: '1.2.0' },
+    { name: 'browser-control', version: '1.3.0' },
     {
       capabilities: { logging: {} },
       instructions: [
@@ -202,12 +207,20 @@ async function main(): Promise<void> {
         'browser_snapshot — Get a compact accessibility-tree view (interactive/semantic elements only)',
         '  Params:',
         '    maxNodes (optional, number, default 300) — cap on elements included',
+        '    diff (optional, boolean) — return only elements added/removed since your last snapshot',
+        '      call in this session, instead of the full tree. Cheap way to check "did that click work?"',
         '    sessionId (optional, string) — headless session ID',
         '    mode (optional, "connect" or "headless") — override session default',
         '  Returns: { snapshot } — indented text list like: "- button \\"Submit\\" [ref=e12]"',
         '  PREFER THIS over browser_get_dom when exploring an unfamiliar page — it costs a tiny',
         '  fraction of the tokens a full HTML dump does. Each [ref=e12] is also a valid CSS selector:',
         '  pass \'[data-mcp-ref="e12"]\' directly as the selector for browser_click/type/hover/select_option.',
+        '',
+        'browser_stats — Cheap pre-check of page size before calling browser_get_dom',
+        '  Params: sessionId, mode — standard params',
+        '  Returns: { url, title, domNodeCount, approxHtmlLength, approxTextLength }',
+        '  Call this on an unfamiliar page BEFORE browser_get_dom to decide whether a full dump is safe,',
+        '  or whether to scope it (selector/maxLength) or use browser_snapshot/browser_extract instead.',
         '',
         'browser_execute — Run arbitrary JavaScript on the page',
         '  Params:',
@@ -288,11 +301,13 @@ async function main(): Promise<void> {
         '',
         'browser_tabs — Manage browser tabs',
         '  Params:',
-        '    action (REQUIRED, "list" | "new" | "switch" | "close") — Tab action',
+        '    action (REQUIRED, "list" | "new" | "switch" | "close" | "screenshot") — Tab action',
         '    url (optional, string) — URL for new tab',
-        '    index (optional, number) — Tab index for switch/close (0-based)',
+        '    index (optional, number) — Tab index for switch/close/screenshot (0-based)',
         '    sessionId, mode — standard params',
         '  Use cases: OAuth popups, multi-page workflows, open links in new tabs',
+        '  "screenshot" captures a specific tab by index WITHOUT switching the active tab — use it to',
+        '  compare two open tabs, or peek at a background tab, without disrupting the current one.',
         '',
         'browser_navigate_back — Go back to previous page',
         '  Params: sessionId, mode — standard params',
@@ -343,6 +358,15 @@ async function main(): Promise<void> {
         '    path (REQUIRED for "configure") — absolute directory to save downloads to',
         '    sessionId, mode — standard params',
         '  Call "configure" BEFORE triggering a download (e.g. clicking a download link), then "list" after',
+        '',
+        'browser_macro — Save a named sequence of tool calls, replay it by name later',
+        '  Params:',
+        '    action (REQUIRED, "save" | "run" | "list" | "delete")',
+        '    name (required for save/run/delete) — macro name',
+        '    steps (required for "save") — array of { tool, args } to run in order',
+        '    sessionId, mode (for "run") — merged into every step\'s args, so one macro can target any session',
+        '  Example: save({name:"login", steps:[{tool:"browser_click",args:{selector:"#user"}}, ...]}) once,',
+        '  then run({name:"login", sessionId}) any time — collapses a repeated flow into one tool call.',
         '',
         '=== COMMON USE CASES ===',
         '',
@@ -458,6 +482,7 @@ async function main(): Promise<void> {
 
   for (const tool of tools) {
     server.registerTool(tool.name, tool.options, tool.handler);
+    registerTool(tool);
   }
 
   const transport = new StdioServerTransport();

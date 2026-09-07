@@ -105,6 +105,8 @@ The agent will use the browser tools automatically.
 | `browser_pdf` | Render the current page to a PDF file |
 | `browser_network` | List captured requests or block by resource type (headless only) |
 | `browser_downloads` | Configure a download directory and list downloaded files |
+| `browser_stats` | Cheap page-size pre-check before calling `browser_get_dom` |
+| `browser_macro` | Save a named sequence of tool calls, replay it later |
 
 ## Browser Modes
 

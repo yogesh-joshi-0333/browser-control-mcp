@@ -85,4 +85,48 @@ describe('browser_snapshot', () => {
 
     expect(result.isError).toBe(true);
   });
+
+  it('with diff:true and no prior snapshot for the session, returns the full snapshot', async () => {
+    const mockPage = {
+      evaluate: jest.fn<(...args: unknown[]) => Promise<{ nodes: unknown[]; totalInteresting: number }>>().mockResolvedValue({
+        nodes: [{ ref: 'e1', depth: 0, role: 'button', name: 'Submit', state: [] }],
+        totalInteresting: 1
+      })
+    };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-diff-1' });
+    mockGetSession.mockReturnValue({ id: 'session-diff-1', page: mockPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    const result = await snapshotTool.handler({ sessionId: 'session-diff-1', diff: true });
+
+    const parsed = JSON.parse((result.content[0] as { text: string }).text);
+    expect(parsed.snapshot).toBe('- button "Submit" [ref=e1]');
+  });
+
+  it('with diff:true on a second call, returns only what changed since the first call', async () => {
+    const firstPage = {
+      evaluate: jest.fn<(...args: unknown[]) => Promise<{ nodes: unknown[]; totalInteresting: number }>>().mockResolvedValue({
+        nodes: [{ ref: 'e1', depth: 0, role: 'button', name: 'Submit', state: [] }],
+        totalInteresting: 1
+      })
+    };
+    mockSelectMode.mockResolvedValue({ mode: 'headless', sessionId: 'session-diff-2' });
+    mockGetSession.mockReturnValue({ id: 'session-diff-2', page: firstPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+    await snapshotTool.handler({ sessionId: 'session-diff-2', diff: true });
+
+    const secondPage = {
+      evaluate: jest.fn<(...args: unknown[]) => Promise<{ nodes: unknown[]; totalInteresting: number }>>().mockResolvedValue({
+        nodes: [
+          { ref: 'e1', depth: 0, role: 'button', name: 'Submit', state: [] },
+          { ref: 'e2', depth: 0, role: 'link', name: 'Cancel', state: [] }
+        ],
+        totalInteresting: 2
+      })
+    };
+    mockGetSession.mockReturnValue({ id: 'session-diff-2', page: secondPage as never, browser: {} as never, createdAt: new Date(), logs: [], networkLog: [], blockedResourceTypes: new Set() });
+
+    const result = await snapshotTool.handler({ sessionId: 'session-diff-2', diff: true });
+
+    const parsed = JSON.parse((result.content[0] as { text: string }).text);
+    expect(parsed.snapshot).toBe('+ - link "Cancel" [ref=e2]');
+  });
 });
